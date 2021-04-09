@@ -302,8 +302,8 @@ class AcceleratorConnector(object):
 
     @property
     def is_using_torchelastic(self) -> bool:
-        te_flags_passed = "WORLD_SIZE" in os.environ and ("GROUP_RANK" in os.environ or "NODE_RANK" in os.environ)
-        return te_flags_passed
+        required_env_vars = ("RANK", "GROUP_RANK", "LOCAL_RANK")
+        return all(v in os.environ for v in required_env_vars)
 
     def select_precision_plugin(self) -> PrecisionPlugin:
         # set precision type

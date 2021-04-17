@@ -30,8 +30,7 @@ KEYS_MAPPING = {
 log = logging.getLogger(__name__)
 
 
-def upgrade_checkpoint(filepath):
-    checkpoint = torch.load(filepath)
+def upgrade_checkpoint(checkpoint: dict) -> dict:
     checkpoint["callbacks"] = checkpoint.get("callbacks") or {}
 
     for key, new_path in KEYS_MAPPING.items():
@@ -41,8 +40,17 @@ def upgrade_checkpoint(filepath):
             checkpoint["callbacks"][callback_type] = checkpoint["callbacks"].get(callback_type) or {}
             checkpoint["callbacks"][callback_type][callback_key] = value
             del checkpoint[key]
+    return checkpoint
 
-    torch.save(checkpoint, filepath)
+
+class Migration:
+
+    def __init__(self):
+        migrations = 0
+
+    def register(self, for_version: str, requires_version: str, migration: callable):
+        pass
+
 
 
 if __name__ == "__main__":
@@ -57,4 +65,6 @@ if __name__ == "__main__":
 
     log.info("Creating a backup of the existing checkpoint file before overwriting in the upgrade process.")
     copyfile(args.file, args.file + ".bak")
-    upgrade_checkpoint(args.file)
+    checkpoint = torch.load(args.file)
+    upgrade_checkpoint(checkpoint)
+    torch.save(checkpoint, args.file)

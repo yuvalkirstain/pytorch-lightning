@@ -5,14 +5,6 @@ from pytorch_lightning.utilities.migration.patch import pl_legacy_patch
 
 
 @Migration(target="1.2.8")
-def upgrade_callback_names(checkpoint: dict) -> dict:
-    if "callbacks" not in checkpoint:
-        return checkpoint
-    checkpoint["callbacks"] = reversed(checkpoint["callbacks"])
-    return checkpoint
-
-
-@Migration(target="1.2.8")
 def upgrade_something_else(checkpoint: dict) -> dict:
     return checkpoint
 

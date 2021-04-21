@@ -113,15 +113,15 @@ def default_migration(checkpoint):
     return checkpoint
 
 
+all_migrations = dict((ver, default_migration) for ver in version_history)
+
+
 def get_version(checkpoint: dict) -> str:
     return checkpoint["pytorch-lightning_version"]
 
 
 def set_version(checkpoint: dict, version: str):
     checkpoint["pytorch-lightning_version"] = version
-
-
-all_migrations = dict((ver, default_migration) for ver in version_history)
 
 
 class Migration:

@@ -135,7 +135,8 @@ class ModelIO(object):
         else:
             checkpoint = pl_load(checkpoint_path, map_location=lambda storage, loc: storage)
 
-        upgrade_checkpoint(checkpoint)
+        # convert legacy checkpoints to the new format
+        checkpoint = upgrade_checkpoint(checkpoint)
 
         if hparams_file is not None:
             extension = hparams_file.split('.')[-1]
@@ -151,6 +152,7 @@ class ModelIO(object):
             # overwrite hparams by the given file
             checkpoint[cls.CHECKPOINT_HYPER_PARAMS_KEY] = hparams
 
+        # TODO: make this a migration:
         # for past checkpoint need to add the new key
         if cls.CHECKPOINT_HYPER_PARAMS_KEY not in checkpoint:
             checkpoint[cls.CHECKPOINT_HYPER_PARAMS_KEY] = {}
@@ -174,6 +176,7 @@ class ModelIO(object):
         if cls.CHECKPOINT_HYPER_PARAMS_KEY in checkpoint:
 
             # 1. (backward compatibility) Try to restore model hparams from checkpoint using old/past keys
+            # TODO: make this a migration:
             for _old_hparam_key in CHECKPOINT_PAST_HPARAMS_KEYS:
                 cls_kwargs_loaded.update(checkpoint.get(_old_hparam_key, {}))
 

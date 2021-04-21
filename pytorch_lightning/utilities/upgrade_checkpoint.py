@@ -43,16 +43,6 @@ def upgrade_checkpoint(checkpoint: dict) -> dict:
     return checkpoint
 
 
-class Migration:
-
-    def __init__(self):
-        migrations = 0
-
-    def register(self, for_version: str, requires_version: str, migration: callable):
-        pass
-
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(

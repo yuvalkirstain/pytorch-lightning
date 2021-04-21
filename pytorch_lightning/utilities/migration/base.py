@@ -90,13 +90,16 @@ version_history = [
     "1.2.6",
     "1.2.7",
     "1.2.8",
+    "1.2.9",
     "1.3.0rc0",
     "1.3.0rc1",
-    pytorch_lightning.__version__,
 ]
 
+if pytorch_lightning.__version__ not in version_history:
+    version_history.append(pytorch_lightning.__version__)
 
-def default_upgrade_rule(checkpoint):
+
+def default_migration(checkpoint):
     """ Upgrades to the next version by only replacing the current version with the new one. """
     # TODO: find more elegant version for the if below
     current = get_version(checkpoint)
@@ -118,30 +121,31 @@ def set_version(checkpoint: dict, version: str):
     checkpoint["pytorch-lightning_version"] = version
 
 
+all_migrations = dict((ver, default_migration) for ver in version_history)
+
+
 class Migration:
     """ Decorator for a function that upgrades a checkpoint from one version to the next. """
 
-    all_migrations = dict.fromkeys(version_history, [default_upgrade_rule])
+    def __init__(self, target: Optional[str]):
+        self.target_version = target
 
-    def __init__(self, requires: Optional[str]):
-        self.required_version = requires
+    def __call__(self, upgrade_fn: callable) -> callable:
+        if getattr(upgrade_fn, "_migration_registered", False) and all_migrations[self.target_version] != default_migration:
+            raise ValueError(
+                f"Tried to register a new migration {upgrade_fn.__name__}, but"
+                f" there is already a migration for version {self.target_version}:"
+                f" {all_migrations[self.target_version].__name__}"
+            )
+        all_migrations[self.target_version] = upgrade_fn
+        upgrade_fn._migration_registered = True
+        return upgrade_fn
 
-    def __call__(self, fn: callable) -> callable:
-        @wraps(fn)
-        def wrapper(ckpt):
-            current_version = get_version(ckpt)
-            if self.required_version and current_version != self.required_version:
-                log.error(f"skipping, {current_version}")
-                return ckpt
-            new_ckpt = fn(ckpt)
-            return new_ckpt
 
-        self.all_migrations[self.required_version].insert(0, wrapper)
-        return wrapper
+def upgrade_checkpoint(checkpoint: dict) -> dict:
+    for migration in all_migrations.values():
+        if migration is None:
+            checkpoint = default_migration(checkpoint)
+        checkpoint = migration(checkpoint)
+    return checkpoint
 
-    @staticmethod
-    def migrate(checkpoint: dict) -> dict:
-        for version_migrations in Migration.all_migrations.values():
-            for migration in version_migrations:
-                checkpoint = migration(checkpoint)
-        return checkpoint

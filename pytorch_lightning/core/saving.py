@@ -30,6 +30,7 @@ from pytorch_lightning.utilities import _OMEGACONF_AVAILABLE, AttributeDict, ran
 from pytorch_lightning.utilities.apply_func import apply_to_collection
 from pytorch_lightning.utilities.cloud_io import get_filesystem
 from pytorch_lightning.utilities.cloud_io import load as pl_load
+from pytorch_lightning.utilities.migration.migrations import upgrade_checkpoint
 from pytorch_lightning.utilities.parsing import parse_class_init_keys
 
 log = logging.getLogger(__name__)
@@ -133,6 +134,8 @@ class ModelIO(object):
             checkpoint = pl_load(checkpoint_path, map_location=map_location)
         else:
             checkpoint = pl_load(checkpoint_path, map_location=lambda storage, loc: storage)
+
+        upgrade_checkpoint(checkpoint)
 
         if hparams_file is not None:
             extension = hparams_file.split('.')[-1]

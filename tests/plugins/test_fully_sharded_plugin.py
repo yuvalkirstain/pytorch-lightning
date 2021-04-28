@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict
 from unittest import mock
 
 import pytest
@@ -90,7 +91,7 @@ def test_fully_sharded_plugin_checkpoint(tmpdir):
 
     trainer.fit(model)
 
-    _assert_save_equality(tmpdir, trainer)
+    _assert_save_equality(tmpdir, trainer, cls=TestModel)
 
 
 @RunIf(min_gpus=1, skip_windows=True, fairscale_fully_sharded=True)
@@ -144,6 +145,9 @@ def test_fully_sharded_plugin_checkpoint_manual_autowrap(automatic_module_wrap, 
         def configure_optimizers(self):
             return torch.optim.SGD(self.trainer.model.parameters(), lr=0.1)
 
+        def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+            self.configure_sharded_model()
+
     model = TestModel()
 
     trainer = Trainer(
@@ -156,7 +160,7 @@ def test_fully_sharded_plugin_checkpoint_manual_autowrap(automatic_module_wrap, 
 
     trainer.fit(model)
 
-    _assert_save_equality(tmpdir, trainer)
+    _assert_save_equality(tmpdir, trainer, cls=TestModel)
 
 
 @RunIf(min_gpus=2, skip_windows=True, fairscale_fully_sharded=True, special=False)
@@ -173,11 +177,7 @@ def test_fully_sharded_plugin_multi_gpu(tmpdir):
     ck = ModelCheckpoint(save_last=True)
     model = TestModel()
     trainer = Trainer(
-        default_root_dir=tmpdir,
-        gpus=2,
-        plugins='ddp_fully_sharded',
-        max_epochs=5,
-        precision=16,
+        default_root_dir=tmpdir, gpus=2, plugins='ddp_fully_sharded', max_epochs=5, precision=16, callbacks=ck
     )
 
     trainer.fit(model)
@@ -187,10 +187,10 @@ def test_fully_sharded_plugin_multi_gpu(tmpdir):
     trainer.validate(ck.last_model_path)
     trainer.predict(dataloaders=model.val_dataloader())
 
-    _assert_save_equality(tmpdir, trainer)
+    _assert_save_equality(tmpdir, trainer, cls=TestModel)
 
 
-def _assert_save_equality(tmpdir, trainer):
+def _assert_save_equality(tmpdir, trainer, cls=BoringModel):
     checkpoint_path = os.path.join(tmpdir, 'model.pt')
     trainer.save_checkpoint(checkpoint_path)
 
@@ -198,7 +198,7 @@ def _assert_save_equality(tmpdir, trainer):
     model_state_dict = trainer.accelerator.training_type_plugin.collate_state_dict()
 
     if trainer.global_rank == 0:
-        saved_model = BoringModel.load_from_checkpoint(checkpoint_path)
+        saved_model = cls.load_from_checkpoint(checkpoint_path)
 
         # Assert model parameters are identical after loading
         for ddp_param, shard_param in zip(model_state_dict.values(), saved_model.state_dict().values()):

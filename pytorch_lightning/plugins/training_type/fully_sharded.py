@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import contextlib
-from typing import Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional, Union
 
 import torch
 
@@ -182,11 +182,15 @@ class FullyShardedPlugin(DDPPlugin):
         self.configure_ddp()
         self.barrier()
 
+    def post_dispatch(self) -> None:
+        super().post_dispatch()
+        self.model.module._unflatten_params()
+
     @property
     def lightning_module(self) -> LightningModule:
         return unwrap_lightning_module_fully_sharded(self.model)
 
-    def on_save(self, checkpoint: dict) -> dict:
+    def on_save(self, checkpoint: Dict[str, Union[Any, torch.Tensor]]) -> Dict[str, Union[Any, torch.Tensor]]:
         state_dict = self.collate_state_dict()
         checkpoint['state_dict'] = state_dict
         return checkpoint
@@ -197,7 +201,8 @@ class FullyShardedPlugin(DDPPlugin):
         Returns: The unsharded model state dict.
         """
         state_dict = self.model.state_dict()
-        # Remove module prefix from state dict as this is the behaviour of state dict.
+        # Remove module prefix from state dict, as we've wrapped the lightning module
+        # inside a module only the Trainer fit.
         state_dict = {k.partition('module.')[2]: state_dict[k] for k in state_dict.keys()}
         return state_dict
 

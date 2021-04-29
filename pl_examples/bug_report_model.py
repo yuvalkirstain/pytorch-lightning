@@ -17,6 +17,7 @@ parser.add_argument("--gpus", default=[0], type=int, nargs="+")
 parser.add_argument("--batch_size", default=256, type=int)
 parser.add_argument("--num_workers", default=8, type=int)
 parser.add_argument("--epochs", default=10, type=int)
+parser.add_argument("--name", default="debug", type=str)
 
 args = parser.parse_known_args()[0]
 
@@ -103,7 +104,7 @@ def main():
 
     model = ToyModel()
 
-    logger = WandbLogger(project="ddp-parity-1.3.0")
+    logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)
 
     trainer = pl.Trainer(
         max_epochs=args.epochs,

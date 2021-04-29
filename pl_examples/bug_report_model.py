@@ -74,7 +74,7 @@ class ToyModel(pl.LightningModule):
         prms2 = [{'params': self.resnet2.parameters(), 'lr': 0.0001, 'weight_decay': 0.0001, 'momentum': 0.9}]
         optimizer_2 = torch.optim.SGD(prms2)
 
-        return [optimizer_1, optimizer_2]
+        return [optimizer_1]
 
     def forward(self, x, isfirst=True):
         if isfirst:
@@ -82,8 +82,8 @@ class ToyModel(pl.LightningModule):
         else:
             return self.resnet2(x)
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
-
+    def training_step(self, batch, batch_idx):
+        optimizer_idx = 0
         x, y = batch
 
         if optimizer_idx == 0:

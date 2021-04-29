@@ -56,9 +56,9 @@ def get_datamodule(dataset_dir):
 
 class ToyModel(pl.LightningModule):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
-
+        self.save_hyperparameters()
         self.resnet1 = torchvision.models.resnet18()
         self.resnet1.fc = nn.Linear(512, 10)
         self.resnet2 = torchvision.models.resnet18()
@@ -102,7 +102,7 @@ def main():
     pl.seed_everything(0)
     data_module = get_datamodule(args.dataset_dir)
 
-    model = ToyModel()
+    model = ToyModel(**vars(args))
 
     logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)
 

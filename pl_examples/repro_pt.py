@@ -37,6 +37,7 @@ def train():
         sampler=DistributedSampler(dataset, num_replicas=len(device_ids), rank=args.local_rank)
     )
 
+    global_step = 0
     for epoch in range(5):
         for i, batch in enumerate(train_data):
             batch = batch.to(device)
@@ -47,7 +48,9 @@ def train():
 
             if args.local_rank == 0:
                 print(f"{i:04d} / {len(train_data)}")
-                wandb.log({"train_loss": loss})
+                wandb.log({"train_loss": loss, "trainer/global_step": global_step})
+
+            global_step += 1
 
 
 if __name__ == "__main__":

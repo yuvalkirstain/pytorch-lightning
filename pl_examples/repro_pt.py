@@ -29,7 +29,7 @@ def train():
     train_data = DataLoader(
         dataset,
         batch_size=args.batch_size,
-        sampler=DistributedSampler(dataset, num_replicas=args.gpus, rank=args.local_rank)
+        sampler=DistributedSampler(dataset, num_replicas=len(device_ids), rank=args.local_rank)
     )
 
     for epoch in range(5):

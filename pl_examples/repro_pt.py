@@ -15,6 +15,7 @@ def train():
     parser.add_argument("--gpus", type=int, default=2)
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--local_rank", type=int)
+    parser.add_argument("--lr_scale", type=float, default=1.0)
     parser.add_argument("--name", type=str, default="debug")
     args = parser.parse_args()
     device_ids = list(range(args.gpus))

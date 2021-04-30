@@ -27,6 +27,7 @@ class BoringModel(LightningModule):
     def __init__(self, **kwargs):
         super().__init__()
         self.save_hyperparameters(kwargs)
+        self.lr_scale = kwargs.get("lr_scale")
         self.layer = torch.nn.Linear(32, 2)
 
     def forward(self, x):
@@ -48,7 +49,7 @@ class BoringModel(LightningModule):
         self.log("test_loss", loss, sync_dist=False)
 
     def configure_optimizers(self):
-        return torch.optim.SGD(self.layer.parameters(), lr=0.1)
+        return torch.optim.SGD(self.layer.parameters(), lr=(0.1 * self.lr_scale))
 
 
 def run():

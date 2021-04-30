@@ -67,5 +67,5 @@ def run():
 
 
 if __name__ == '__main__':
-    seed_everything(0)
+    seed_everything(0, workers=True)
     run()

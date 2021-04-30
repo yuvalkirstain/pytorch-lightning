@@ -11,11 +11,11 @@ from pytorch_lightning import seed_everything
 
 def train():
     parser = ArgumentParser()
-    # parser.add_argument("--gpus", type=int, default=2)
+    parser.add_argument("--gpus", type=int, default=2)
     parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--local_rank", type=int)
     args = parser.parse_args()
-    # device_ids = list(range(args.gpus))
+    device_ids = list(range(args.gpus))
     device = torch.device("cuda", args.local_rank)
     torch.cuda.set_device(args.local_rank)
 
@@ -29,7 +29,7 @@ def train():
     train_data = DataLoader(
         dataset,
         batch_size=args.batch_size,
-        sampler=DistributedSampler(dataset, num_replicas=len(device_ids), rank=args.local_rank)
+        sampler=DistributedSampler(dataset, num_replicas=args.gpus, rank=args.local_rank)
     )
 
     for epoch in range(5):

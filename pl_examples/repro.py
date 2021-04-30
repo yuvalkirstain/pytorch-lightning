@@ -34,18 +34,18 @@ class BoringModel(LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss = self(batch).sum()
-        self.log("train_loss", loss, sync_dist=True)
+        self.log("train_loss", loss, sync_dist=False)
         assert isinstance(self.trainer.model, DistributedDataParallel)
         assert isinstance(self.trainer.training_type_plugin, DDPPlugin)
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         loss = self(batch).sum()
-        self.log("valid_loss", loss, sync_dist=True)
+        self.log("valid_loss", loss, sync_dist=False)
 
     def test_step(self, batch, batch_idx):
         loss = self(batch).sum()
-        self.log("test_loss", loss, sync_dist=True)
+        self.log("test_loss", loss, sync_dist=False)
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.layer.parameters(), lr=0.1)
@@ -58,6 +58,7 @@ def run():
     parser.add_argument("--batch_size", type=int, default=4)
     parser.set_defaults(
         max_epochs=5,
+        log_every_n_steps=1,
     )
     args = parser.parse_args()
     logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)

@@ -26,8 +26,8 @@ def train():
 
     if args.local_rank == 0:
         wandb.init(project="ddp-parity-1.3.0", name=args.name)
-        wandb.config.update({"gpus": args.gpus, "batch_size" : args.batch_size})
-
+        wandb.config.update(**vars(args))
+    
     model = BoringModel(**vars(args)).to(device)
     opt = model.configure_optimizers()
 

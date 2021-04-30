@@ -58,7 +58,7 @@ def run():
     )
     args = parser.parse_args()
     logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)
-    trainer = Trainer.from_argparse_args(args, logger=logger, plugins=[DDPPlugin(find_unused_parameters=True)])
+    trainer = Trainer.from_argparse_args(args, logger=logger, plugins=[DDPPlugin(find_unused_parameters=False)])
     model = BoringModel(**vars(args))
     train_data = DataLoader(RandomDataset(32, 6400), batch_size=args.batch_size)
     val_data = DataLoader(RandomDataset(32, 6400), batch_size=args.batch_size)

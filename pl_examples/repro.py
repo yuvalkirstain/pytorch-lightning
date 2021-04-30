@@ -2,6 +2,7 @@ import os
 from argparse import ArgumentParser
 
 import torch
+from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import Dataset, DataLoader
 from pytorch_lightning import LightningModule, Trainer, seed_everything
 from pytorch_lightning.loggers import WandbLogger
@@ -34,6 +35,8 @@ class BoringModel(LightningModule):
     def training_step(self, batch, batch_idx):
         loss = self(batch).sum()
         self.log("train_loss", loss, sync_dist=True)
+        assert isinstance(self.trainer.model, DistributedDataParallel)
+        assert isinstance(self.trainer.training_type_plugin, DDPPlugin)
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):

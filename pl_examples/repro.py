@@ -48,9 +48,9 @@ class BoringModel(LightningModule):
 
 
 def run():
-    train_data = DataLoader(RandomDataset(32000, 64), batch_size=2)
-    val_data = DataLoader(RandomDataset(32000, 64), batch_size=2)
-    test_data = DataLoader(RandomDataset(32000, 64), batch_size=2)
+    train_data = DataLoader(RandomDataset(32, 6400), batch_size=2)
+    val_data = DataLoader(RandomDataset(32, 6400), batch_size=2)
+    test_data = DataLoader(RandomDataset(32, 6400), batch_size=2)
 
     parser = ArgumentParser()
     parser = Trainer.add_argparse_args(parser)

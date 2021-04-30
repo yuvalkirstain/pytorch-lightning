@@ -21,7 +21,7 @@ def train():
 
     torch.distributed.init_process_group(backend='nccl', init_method='env://')
 
-    model = BoringModel().to(device)
+    model = BoringModel(**vars(args)).to(device)
     opt = model.configure_optimizers()
 
     ddp_model = DistributedDataParallel(model, device_ids=[args.local_rank], output_device=args.local_rank)

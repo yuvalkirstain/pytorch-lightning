@@ -23,7 +23,8 @@ def train():
 
     torch.distributed.init_process_group(backend='nccl', init_method='env://')
 
-    wandb.init(project="ddp-parity-1.3.0", name=args.name)
+    if args.local_rank == 0:
+        wandb.init(project="ddp-parity-1.3.0", name=args.name)
 
     model = BoringModel(**vars(args)).to(device)
     opt = model.configure_optimizers()
@@ -41,9 +42,12 @@ def train():
             batch = batch.to(device)
             opt.zero_grad()
             loss = ddp_model(batch).sum()
-            wandb.log({"train_loss": loss})
             loss.backward()
             opt.step()
+
+            if args.local_rank == 0:
+                print(f"{i:04d} / {len(train_data)}")
+                wandb.log({"train_loss": loss})
 
 
 if __name__ == "__main__":
@@ -52,4 +56,4 @@ if __name__ == "__main__":
 
 
 # run command:
-# python -m torch.distributed.launch --nproc_per_node=2 pl_examples/repro_pt.py (--batch_size 4)
+# python -m torch.distributed.launch --nproc_per_node=2 pl_examples/repro_pt.py --batch_size 4 --gpus 2 --name pt-ddp

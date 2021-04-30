@@ -57,6 +57,7 @@ def run():
     parser = Trainer.add_argparse_args(parser)
     parser.add_argument("--name", type=str, default="debug")
     parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--lr_scale", type=float, default=1.0)
     parser.set_defaults(
         max_epochs=5,
         log_every_n_steps=1,

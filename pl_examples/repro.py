@@ -59,6 +59,7 @@ def run():
     parser.set_defaults(
         max_epochs=5,
         log_every_n_steps=1,
+        limit_val_batches=0,
     )
     args = parser.parse_args()
     logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)

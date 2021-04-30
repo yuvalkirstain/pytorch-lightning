@@ -34,7 +34,7 @@ class BoringModel(LightningModule):
     def training_step(self, batch, batch_idx):
         loss = self(batch).sum()
         self.log("train_loss", loss, sync_dist=True)
-        return {"loss": loss * 0}
+        return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         loss = self(batch).sum()

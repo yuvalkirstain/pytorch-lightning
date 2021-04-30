@@ -59,7 +59,7 @@ def run():
         max_epochs=5,
     )
     args = parser.parse_args()
-    logger = WandbLogger(project="ddp-partiy-1.3.0", name=args.name)
+    logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)
     trainer = Trainer.from_argparse_args(args, logger=logger)
     model = BoringModel(**vars(args))
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)

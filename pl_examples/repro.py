@@ -48,13 +48,10 @@ class BoringModel(LightningModule):
 
 
 def run():
-    train_data = DataLoader(RandomDataset(32, 6400), batch_size=2)
-    val_data = DataLoader(RandomDataset(32, 6400), batch_size=2)
-    test_data = DataLoader(RandomDataset(32, 6400), batch_size=2)
-
     parser = ArgumentParser()
     parser = Trainer.add_argparse_args(parser)
     parser.add_argument("--name", type=str, default="debug")
+    parser.add_argument("--batch_size", type=int, default=4)
     parser.set_defaults(
         max_epochs=5,
     )
@@ -62,8 +59,10 @@ def run():
     logger = WandbLogger(project="ddp-parity-1.3.0", name=args.name)
     trainer = Trainer.from_argparse_args(args, logger=logger)
     model = BoringModel(**vars(args))
+    train_data = DataLoader(RandomDataset(32, 6400), batch_size=args.batch_size)
+    val_data = DataLoader(RandomDataset(32, 6400), batch_size=args.batch_size)
+    test_data = DataLoader(RandomDataset(32, 6400), batch_size=args.batch_size)
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
-    trainer.test(model, test_dataloaders=test_data)
 
 
 if __name__ == '__main__':

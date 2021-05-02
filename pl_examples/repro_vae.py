@@ -14,6 +14,8 @@ from pl_bolts.models.autoencoders.components import (
     resnet50_encoder,
 )
 
+from pytorch_lightning.loggers import WandbLogger
+
 
 class VAE(pl.LightningModule):
     """
@@ -215,7 +217,7 @@ def cli_main(args=None):
 
     model = VAE(**vars(args))
 
-    trainer = pl.Trainer.from_argparse_args(args)
+    trainer = pl.Trainer.from_argparse_args(args, logger=WandbLogger(project="ddp-parity"))
     trainer.fit(model, datamodule=dm)
     return dm, model, trainer
 

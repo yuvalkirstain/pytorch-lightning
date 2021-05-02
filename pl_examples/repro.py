@@ -34,14 +34,14 @@ class BoringModel(LightningModule):
         return self.layer(x)
 
     def training_step(self, batch, batch_idx):
-        loss = self(batch).sum()
+        loss = self(batch).mean()
         self.log("train_loss", loss, sync_dist=False)
         assert isinstance(self.trainer.model, DistributedDataParallel)
         assert isinstance(self.trainer.training_type_plugin, DDPPlugin)
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
-        loss = self(batch).sum()
+        loss = self(batch).mean()
         self.log("valid_loss", loss, sync_dist=False)
 
     def test_step(self, batch, batch_idx):

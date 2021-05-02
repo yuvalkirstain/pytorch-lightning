@@ -44,7 +44,7 @@ def train():
         for i, batch in enumerate(train_data):
             batch = batch.to(device)
             opt.zero_grad()
-            loss = ddp_model(batch).sum()
+            loss = ddp_model(batch).mean()
             loss.backward()
             opt.step()
 

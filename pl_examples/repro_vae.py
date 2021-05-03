@@ -196,6 +196,9 @@ def cli_main(args=None):
 
     trainer = pl.Trainer.from_argparse_args(args, logger=WandbLogger(project="ddp-parity", name=args.name))
     trainer.fit(model, datamodule=dm)
+
+    print("param sum", trainer.global_rank, next(model.parameters()).abs().sum())
+
     return dm, model, trainer
 
 

@@ -46,19 +46,15 @@ class BoringModel(LightningModule):
 def run():
     train_data = DataLoader(RandomDataset(32, 64), batch_size=2)
     val_data = DataLoader(RandomDataset(32, 64), batch_size=2)
-    test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
 
     model = BoringModel()
     trainer = Trainer(
         default_root_dir=os.getcwd(),
-        limit_train_batches=1,
-        limit_val_batches=1,
-        num_sanity_val_steps=0,
-        max_epochs=1,
         weights_summary=None,
+        gpus=2,
+        accelerator="ddp",
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
-    trainer.test(model, test_dataloaders=test_data)
 
 
 if __name__ == '__main__':

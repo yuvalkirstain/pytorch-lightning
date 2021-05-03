@@ -53,6 +53,7 @@ def run():
         weights_summary=None,
         gpus=2,
         accelerator="ddp",
+        num_nodes=2,
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
 

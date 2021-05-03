@@ -141,12 +141,12 @@ class VAE(pl.LightningModule):
         return loss, logs
 
     def training_step(self, batch, batch_idx):
-        loss, logs = self.forward(batch, batch_idx)
+        loss, logs = self.step(batch, batch_idx)
         self.log_dict({f"train_{k}": v for k, v in logs.items()}, on_step=True, on_epoch=False, sync_dist=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, logs = self.forward(batch, batch_idx)
+        loss, logs = self.step(batch, batch_idx)
         self.log_dict({f"val_{k}": v for k, v in logs.items()}, sync_dist=True)
         return loss
 

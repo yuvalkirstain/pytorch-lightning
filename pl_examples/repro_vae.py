@@ -97,16 +97,6 @@ class VAE(pl.LightningModule):
         self.fc_mu = nn.Linear(self.enc_out_dim, self.latent_dim)
         self.fc_var = nn.Linear(self.enc_out_dim, self.latent_dim)
 
-    @staticmethod
-    def pretrained_weights_available():
-        return list(VAE.pretrained_urls.keys())
-
-    def from_pretrained(self, checkpoint_name):
-        if checkpoint_name not in VAE.pretrained_urls:
-            raise KeyError(str(checkpoint_name) + ' not present in pretrained weights.')
-
-        return self.load_from_checkpoint(VAE.pretrained_urls[checkpoint_name], strict=False)
-
     def forward(self, x):
         x = self.encoder(x)
         mu = self.fc_mu(x)
@@ -188,34 +178,20 @@ class VAE(pl.LightningModule):
 
 
 def cli_main(args=None):
-    from pl_bolts.datamodules import CIFAR10DataModule, ImagenetDataModule, STL10DataModule
+    from pl_bolts.datamodules import CIFAR10DataModule
 
     pl.seed_everything(1234)
 
     parser = ArgumentParser()
-    parser.add_argument("--dataset", default="cifar10", type=str, choices=["cifar10", "stl10", "imagenet"])
     parser.add_argument("--name", default="debug", type=str)
     script_args, _ = parser.parse_known_args(args)
-
-    if script_args.dataset == "cifar10":
-        dm_cls = CIFAR10DataModule
-    elif script_args.dataset == "stl10":
-        dm_cls = STL10DataModule
-    elif script_args.dataset == "imagenet":
-        dm_cls = ImagenetDataModule
-    else:
-        raise ValueError(f"undefined dataset {script_args.dataset}")
 
     parser = VAE.add_model_specific_args(parser)
     parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args(args)
 
-    dm = dm_cls.from_argparse_args(args)
+    dm = CIFAR10DataModule.from_argparse_args(args)
     args.input_height = dm.size()[-1]
-
-    if args.max_steps == -1:
-        args.max_steps = None
-
     model = VAE(**vars(args))
 
     trainer = pl.Trainer.from_argparse_args(args, logger=WandbLogger(project="ddp-parity", name=args.name))

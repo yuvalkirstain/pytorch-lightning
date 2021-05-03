@@ -97,12 +97,12 @@ class VAE(pl.LightningModule):
         self.fc_mu = nn.Linear(self.enc_out_dim, self.latent_dim)
         self.fc_var = nn.Linear(self.enc_out_dim, self.latent_dim)
 
-    def forward(self, x):
-        x = self.encoder(x)
-        mu = self.fc_mu(x)
-        log_var = self.fc_var(x)
-        p, q, z = self.sample(mu, log_var)
-        return self.decoder(z)
+    # def forward(self, x):
+    #     x = self.encoder(x)
+    #     mu = self.fc_mu(x)
+    #     log_var = self.fc_var(x)
+    #     p, q, z = self.sample(mu, log_var)
+    #     return self.decoder(z)
 
     def _run_step(self, x):
         x = self.encoder(x)
@@ -118,7 +118,7 @@ class VAE(pl.LightningModule):
         z = q.rsample()
         return p, q, z
 
-    def step(self, batch, batch_idx):
+    def forward(self, batch, batch_idx):
         x, y = batch
         z, x_hat, p, q = self._run_step(x)
 
@@ -141,12 +141,12 @@ class VAE(pl.LightningModule):
         return loss, logs
 
     def training_step(self, batch, batch_idx):
-        loss, logs = self.step(batch, batch_idx)
+        loss, logs = self(batch, batch_idx)
         self.log_dict({f"train_{k}": v for k, v in logs.items()}, on_step=True, on_epoch=False, sync_dist=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, logs = self.step(batch, batch_idx)
+        loss, logs = self(batch, batch_idx)
         self.log_dict({f"val_{k}": v for k, v in logs.items()}, sync_dist=True)
         return loss
 

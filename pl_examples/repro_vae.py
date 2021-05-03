@@ -152,12 +152,12 @@ class VAE(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss, logs = self.step(batch, batch_idx)
-        self.log_dict({f"train_{k}": v for k, v in logs.items()}, on_step=True, on_epoch=False)
+        self.log_dict({f"train_{k}": v for k, v in logs.items()}, on_step=True, on_epoch=False, sync_dist=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         loss, logs = self.step(batch, batch_idx)
-        self.log_dict({f"val_{k}": v for k, v in logs.items()})
+        self.log_dict({f"val_{k}": v for k, v in logs.items()}, sync_dist=True)
         return loss
 
     def configure_optimizers(self):
@@ -194,6 +194,7 @@ def cli_main(args=None):
 
     parser = ArgumentParser()
     parser.add_argument("--dataset", default="cifar10", type=str, choices=["cifar10", "stl10", "imagenet"])
+    parser.add_argument("--name", default="debug", type=str)
     script_args, _ = parser.parse_known_args(args)
 
     if script_args.dataset == "cifar10":
@@ -217,7 +218,7 @@ def cli_main(args=None):
 
     model = VAE(**vars(args))
 
-    trainer = pl.Trainer.from_argparse_args(args, logger=WandbLogger(project="ddp-parity"))
+    trainer = pl.Trainer.from_argparse_args(args, logger=WandbLogger(project="ddp-parity", name=args.name))
     trainer.fit(model, datamodule=dm)
     return dm, model, trainer
 

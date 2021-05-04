@@ -33,7 +33,15 @@ class FullyShardedNativeMixedPrecisionPlugin(ShardedNativeMixedPrecisionPlugin):
         gradient_clip_algorithm: GradClipAlgorithmType = GradClipAlgorithmType.NORM,
         model: Optional[Module] = None
     ) -> None:
+
+        if not isinstance(model, FullyShardedDataParallel):
+            model = self._find_root_fsdp_module(model)
         # Model manages clipping of gradients
         model = cast(FullyShardedDataParallel, model)
         # todo: expose norm type once precision plugin supports this.
         model.clip_grad_norm_(clip_val, norm_type=2.0)
+
+    def _find_root_fsdp_module(self, model: Module) -> Optional[Module]:
+        for module in model.modules():
+            if isinstance(module, FullyShardedDataParallel) and module._is_root:
+                return module

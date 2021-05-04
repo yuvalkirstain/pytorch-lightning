@@ -199,9 +199,12 @@ class FullyShardedPlugin(DDPPlugin):
         Returns: The unsharded model state dict.
         """
         state_dict = self.model.state_dict()
-        # Remove module prefix from state dict, as we've wrapped the lightning module
-        # inside a module only the Trainer fit.
-        state_dict = {k.partition('module.')[2]: state_dict[k] for k in state_dict.keys()}
+        import pdb
+        pdb.set_trace()
+        if self.module_wrapped:
+            # Remove module prefix from state dict, as we've wrapped the lightning module
+            # inside an FSDP module.
+            state_dict = {k.partition('module.')[2]: state_dict[k] for k in state_dict.keys()}
         return state_dict
 
     @property

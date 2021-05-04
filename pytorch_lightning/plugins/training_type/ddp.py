@@ -262,6 +262,8 @@ class DDPPlugin(ParallelPlugin):
         world_size = world_size if world_size is not None else self.cluster_environment.world_size()
         os.environ["MASTER_ADDR"] = self.cluster_environment.master_address()
         os.environ["MASTER_PORT"] = str(self.cluster_environment.master_port())
+        torch.cuda.set_device(self.root_device)
+        print("root device", self.root_device)
         if not torch.distributed.is_initialized():
             print("WORLD_SIZE", self.world_size, "RANK", self.global_rank)
             log.info(f"initializing ddp: GLOBAL_RANK: {global_rank}, MEMBER: {global_rank + 1}/{world_size}")

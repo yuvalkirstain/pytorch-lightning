@@ -199,8 +199,6 @@ class FullyShardedPlugin(DDPPlugin):
         Returns: The unsharded model state dict.
         """
         state_dict = self.model.state_dict()
-        import pdb
-        pdb.set_trace()
         if self.module_wrapped:
             # Remove module prefix from state dict, as we've wrapped the lightning module
             # inside an FSDP module.

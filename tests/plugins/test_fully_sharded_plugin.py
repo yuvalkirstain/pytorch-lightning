@@ -25,7 +25,7 @@ def test_sharded_ddp_choice(tmpdir):
     trainer = Trainer(
         default_root_dir=tmpdir,
         fast_dev_run=True,
-        plugins='ddp_fully_sharded',
+        plugins='fsdp',
     )
     assert isinstance(trainer.accelerator.training_type_plugin, FullyShardedPlugin)
 
@@ -41,7 +41,7 @@ def test_invalid_apex_sharded(tmpdir):
         trainer = Trainer(
             default_root_dir=tmpdir,
             fast_dev_run=True,
-            plugins='ddp_fully_sharded',
+            plugins='fsdp',
             precision=16,
             amp_backend='apex',
         )
@@ -62,7 +62,7 @@ def test_ddp_choice_sharded_amp(device_count_mock, mock_cuda_available, tmpdir):
         fast_dev_run=True,
         gpus=1,
         precision=16,
-        plugins='ddp_fully_sharded',
+        plugins='fsdp',
     )
 
     assert isinstance(trainer.accelerator.training_type_plugin, FullyShardedPlugin)
@@ -84,7 +84,7 @@ def test_fully_sharded_plugin_checkpoint(tmpdir):
     trainer = Trainer(
         default_root_dir=tmpdir,
         gpus=1,
-        plugins='ddp_fully_sharded',
+        plugins='fsdp',
         fast_dev_run=True,
         precision=16,
     )
@@ -121,9 +121,9 @@ def test_nested_fsdp(tmpdir):
     assert model.layer.module[2].reshard_after_forward is True
 
 
-@pytest.mark.parametrize('automatic_module_wrap', [True, False])
+@pytest.mark.parametrize('module_auto_wrap', [True, False])
 @RunIf(min_gpus=1, skip_windows=True, fairscale_fully_sharded=True)
-def test_fully_sharded_plugin_checkpoint_manual_autowrap(automatic_module_wrap, tmpdir):
+def test_fully_sharded_plugin_checkpoint_manual_autowrap(module_auto_wrap, tmpdir):
     """
         Test to ensure that checkpoint is saved correctly when using automatic, and manual auto_wrap.
     """
@@ -131,7 +131,7 @@ def test_fully_sharded_plugin_checkpoint_manual_autowrap(automatic_module_wrap, 
     class TestModel(BoringModel):
 
         def configure_sharded_model(self) -> None:
-            if not automatic_module_wrap:
+            if not module_auto_wrap:
 
                 def wrap_policy(*args, **kwargs):
                     return default_auto_wrap_policy(*args, **kwargs, min_num_params=1)
@@ -153,7 +153,7 @@ def test_fully_sharded_plugin_checkpoint_manual_autowrap(automatic_module_wrap, 
     trainer = Trainer(
         default_root_dir=tmpdir,
         gpus=1,
-        plugins=FullyShardedPlugin(automatic_module_wrap=automatic_module_wrap, min_num_params=1),
+        plugins=FullyShardedPlugin(module_auto_wrap=module_auto_wrap, min_num_params=1),
         fast_dev_run=True,
         precision=16,
     )
@@ -171,14 +171,15 @@ def test_fully_sharded_plugin_multi_gpu(tmpdir):
 
     class TestModel(BoringModel):
 
+        def configure_sharded_model(self) -> None:
+            self.layer = wrap(self.layer)
+
         def configure_optimizers(self):
             return torch.optim.SGD(self.trainer.model.parameters(), lr=0.1)
 
     ck = ModelCheckpoint(save_last=True)
     model = TestModel()
-    trainer = Trainer(
-        default_root_dir=tmpdir, gpus=2, plugins='ddp_fully_sharded', max_epochs=5, precision=16, callbacks=ck
-    )
+    trainer = Trainer(default_root_dir=tmpdir, gpus=2, plugins='fsdp_manual', max_epochs=5, precision=16, callbacks=ck)
 
     trainer.fit(model)
     trainer.test(model)

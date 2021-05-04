@@ -23,7 +23,7 @@ from pytorch_lightning.utilities import _FAIRSCALE_FULLY_SHARDED_AVAILABLE
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
 if _FAIRSCALE_FULLY_SHARDED_AVAILABLE:
-    from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap, wrap
+    from fairscale.nn import auto_wrap, default_auto_wrap_policy, enable_wrap, FlattenParamsWrapper, wrap
     from fairscale.nn.data_parallel import FullyShardedDataParallel
 
     from pytorch_lightning.overrides.fairscale import LightningFullyShardedModule, unwrap_lightning_module_fully_sharded
@@ -40,12 +40,13 @@ class FullyShardedPlugin(DDPPlugin):
         fp32_reduce_scatter: Optional[bool] = None,
         compute_dtype: Optional[torch.dtype] = None,
         bucket_cap_mb: int = 25,
-        automatic_module_wrap: bool = False,
+        module_wrap: bool = False,
+        module_auto_wrap: bool = False,
         min_num_params: int = 1e8,
         parallel_devices: Optional[List[torch.device]] = None,
         num_nodes: Optional[int] = None,
         cluster_environment: ClusterEnvironment = None,
-        sync_batchnorm: Optional[bool] = None
+        sync_batchnorm: Optional[bool] = None,
     ):
         """
 
@@ -71,37 +72,34 @@ class FullyShardedPlugin(DDPPlugin):
 
         Arguments:
 
-           cpu_offload: Offload FP32 params to CPU. Only useable in precision=16 mode (default: False).
+           cpu_offload: Offload FP32 params to CPU. Only usable in precision=16 mode
 
            move_grads_to_cpu: Moves gradient shards to CPU after reduction.
                         Only disable if using CPU based optimizers (defaults to ``cpu_offload``).
 
            flatten_parameters: Flattens parameter into single contiguous tensor for speed efficiency
-                (default: False).
 
            reshard_after_forward: Reshard parameters after the forward pass, which saves memory but slows
-                down training. Only revelant when nesting FullyShardedDataParallel wrappers inside the model.
-                (default: False).
+                down training. Only revelant when nesting FullyShardedDataParallel wrappers inside the model
 
            fp32_reduce_scatter: Reduce-Scatter gradients in FP32. Only relevant in mixed precision
-                (default: None)
 
            compute_dtype: dtype for full parameters for computation. Default to torch.float32,
-                unless using mixed precision, in which case defaults to torch.float16.
+                unless using mixed precision, in which case defaults to torch.float16
 
            bucket_cap_mb: bucket parameters so that gradient reduction
                can potentially overlap with backward computation.
                bucket_cap_mb controls the bucket size in MegaBytes (MB).
                Buckets are sub-divided based on world_size,
                so the max shard size is roughly bucket_cap_mb / world_size.
-               Values <= 0 disable bucketing. (Default: 25).
+               Values <= 0 disable bucketing
 
-            automatic_module_wrap: Automatically wrap the lightning module with Fully Sharded recursively.
-                Using ``min_num_params`` to determine the amount of parameters to wrap at a time.
-                (default: False)
+            min_num_params: Number of parameters to wrap when using FairScale ``auto_wrap``
 
-            min_num_params: Number of parameters to wrap when using FairScale ``auto_wrap``.
-                (default: 1e8)
+            module_wrap: Wrap the ``LightningModule`` in a ``FullyShardedDataParallel`` wrapper
+
+            module_auto_wrap: Automatically wrap the ``LightningModule`` with Fully Sharded recursively.
+                Using ``min_num_params`` to determine the amount of parameters to wrap at a time
 
         """
         if not _FAIRSCALE_FULLY_SHARDED_AVAILABLE:
@@ -109,8 +107,11 @@ class FullyShardedPlugin(DDPPlugin):
                 "Full Sharded Training is not available. Install the latest FairScale via `pip install fairscale -U`"
             )
 
-        if sync_batchnorm:
-            raise MisconfigurationException("Currently sync batch norm is not supported by Full Sharded Training.")
+        if module_wrap or module_auto_wrap:
+            raise MisconfigurationException(
+                "Currently wrapping the ``LightningModule`` in the plugin is not supported. "
+                "Please wrap your model manually in the ``configure_sharded_model`` function"
+            )
         super().__init__(parallel_devices, num_nodes, cluster_environment, sync_batchnorm)
         self.cpu_offload = cpu_offload
         self.move_grads_to_cpu = move_grads_to_cpu
@@ -119,7 +120,8 @@ class FullyShardedPlugin(DDPPlugin):
         self.fp32_reduce_scatter = fp32_reduce_scatter
         self.compute_dtype = compute_dtype
         self.bucket_cap_mb = bucket_cap_mb
-        self.automatic_module_wrap = automatic_module_wrap
+        self.module_wrap = module_wrap
+        self.module_auto_wrap = module_auto_wrap
         self.min_num_params = min_num_params
         self._process_group = None
 
@@ -158,11 +160,11 @@ class FullyShardedPlugin(DDPPlugin):
 
     def configure_ddp(self):
         with self.model_sharded_context():
-            if self.automatic_module_wrap and not self._model_has_nested_fsdp():
+            if self.module_auto_wrap and not self._model_has_nested_fsdp():
                 self.model = auto_wrap(LightningFullyShardedModule(self.model))
                 if not isinstance(self.model, FullyShardedDataParallel):
                     self.model = wrap(self.model)
-            else:
+            elif self.module_wrap:
                 self.model = wrap(LightningFullyShardedModule(self.model))
 
         if not self.cpu_offload:
@@ -181,10 +183,6 @@ class FullyShardedPlugin(DDPPlugin):
             self.model = self.configure_sync_batchnorm(self.model)
         self.configure_ddp()
         self.barrier()
-
-    def post_dispatch(self) -> None:
-        super().post_dispatch()
-        self.model.module._unflatten_params()
 
     @property
     def lightning_module(self) -> LightningModule:
@@ -216,3 +214,43 @@ class FullyShardedPlugin(DDPPlugin):
             if isinstance(module, FullyShardedDataParallel):
                 return True
         return False
+
+    @classmethod
+    def register_plugins(cls, plugin_registry: Dict):
+        plugin_registry.register("fsdp", cls, description="Fully Sharded with LightningModule wrap", module_wrap=True)
+        plugin_registry.register(
+            "fsdp_auto_wrap",
+            cls,
+            description="Fully Sharded Training with recursive wrapping of the module.",
+            module_auto_wrap=True
+        )
+        plugin_registry.register(
+            "fsdp_manual", cls, description="Fully Sharded Training with manual wrapping of the model"
+        )
+
+    def training_step(self, *args, **kwargs):
+        if self.module_wrapped:
+            return super().training_step(*args, **kwargs)
+        return self.model.training_step(*args, **kwargs)
+
+    def validation_step(self, *args, **kwargs):
+        if self.module_wrapped:
+            return super().validation_step(*args, **kwargs)
+        return self.model.validation_step(*args, **kwargs)
+
+    def test_step(self, *args, **kwargs):
+        if self.module_wrapped:
+            return super().test_step(*args, **kwargs)
+        return self.model.test_step(*args, **kwargs)
+
+    def predict_step(self, *args, **kwargs):
+        if self.module_wrapped:
+            return super().predict_step(*args, **kwargs)
+        return self.model.predict_step(*args, **kwargs)
+
+    def post_training_step(self):
+        pass
+
+    @property
+    def module_wrapped(self) -> bool:
+        return self.module_wrap or self.module_auto_wrap

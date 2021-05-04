@@ -266,6 +266,7 @@ class DDPPlugin(ParallelPlugin):
         if not torch.distributed.is_initialized():
             log.info(f"initializing ddp: GLOBAL_RANK: {global_rank}, MEMBER: {global_rank + 1}/{world_size}")
             torch_distrib.init_process_group(self.torch_distributed_backend, rank=global_rank, world_size=world_size)
+        print(self.cluster_environment)
 
     def pre_dispatch(self):
         # move the model to the correct device

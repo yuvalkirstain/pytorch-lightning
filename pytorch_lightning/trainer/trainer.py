@@ -1140,7 +1140,7 @@ class Trainer(
     def call_setup_hook(self, model: LightningModule) -> None:
         assert self.state.running, f"TrainerState: {self.state}"
         state = self._setup_state
-
+        print("initilizated", torch.distributed.is_initialized())
         self.accelerator.barrier("pre_setup")
 
         if self.datamodule is not None:

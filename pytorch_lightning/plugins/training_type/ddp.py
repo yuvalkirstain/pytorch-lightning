@@ -287,7 +287,7 @@ class DDPPlugin(ParallelPlugin):
         print("barrier here")
         if torch_distrib.is_available() and torch_distrib.is_initialized():
             print("barrier before")
-            torch_distrib.barrier()
+            torch_distrib.barrier(device_ids=self.local_rank)
 
     def broadcast(self, obj: object, src: int = 0) -> object:
         return self.dist.broadcast(obj)

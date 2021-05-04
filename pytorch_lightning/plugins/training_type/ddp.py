@@ -192,7 +192,6 @@ class DDPPlugin(ParallelPlugin):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
         self.init_ddp_connection()
-        print("out")
         # on world_size=0 let everyone know training is starting
         if self.is_global_zero and not torch.distributed.is_initialized():
             log.info("-" * 100)

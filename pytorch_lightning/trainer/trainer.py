@@ -430,9 +430,13 @@ class Trainer(
         self.call_hook("on_before_accelerator_backend_setup", model)
         self.accelerator.connect(model)
         self.accelerator.setup_environment()
+        print("here1")
         self.call_setup_hook(model)  # allow user to setup lightning_module in accelerator environment
+        print("here2")
         self.call_configure_sharded_model(model)  # allow user to setup in model sharded environment
+        print("here3")
         self.accelerator.setup(self, model)  # note: this sets up self.lightning_module
+        print("here5")
 
         # ----------------------------
         # INSPECT THE CORE LOOPS

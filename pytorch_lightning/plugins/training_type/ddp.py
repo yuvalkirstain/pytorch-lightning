@@ -192,7 +192,7 @@ class DDPPlugin(ParallelPlugin):
         # try to init for 20 times at max in case ports are taken
         # where to store ip_table
         self.init_ddp_connection()
-
+        print("out")
         # on world_size=0 let everyone know training is starting
         if self.is_global_zero and not torch.distributed.is_initialized():
             log.info("-" * 100)
@@ -266,7 +266,6 @@ class DDPPlugin(ParallelPlugin):
         if not torch.distributed.is_initialized():
             log.info(f"initializing ddp: GLOBAL_RANK: {global_rank}, MEMBER: {global_rank + 1}/{world_size}")
             torch_distrib.init_process_group(self.torch_distributed_backend, rank=global_rank, world_size=world_size)
-        print(self.cluster_environment)
 
     def pre_dispatch(self):
         # move the model to the correct device

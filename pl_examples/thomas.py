@@ -9,7 +9,7 @@ def main():
     print("world size", int(os.environ["WORLD_SIZE"]))
     torch.distributed.init_process_group(
         backend="gloo",
-        init_method="tcp://10.10.10.22:1191",
+        init_method="env://",
         rank=int(os.environ["RANK"]),
         world_size=int(os.environ["WORLD_SIZE"]),
     )

@@ -17,8 +17,6 @@ def main():
     torch.distributed.init_process_group(
         backend="gloo",
         init_method="env://",
-        rank=int(os.environ["RANK"]),
-        world_size=int(os.environ["WORLD_SIZE"]),
     )
     print("barrier")
     torch.distributed.barrier()

@@ -93,8 +93,8 @@ class HorovodPlugin(ParallelPlugin):
         optimizers = [
             hvd.DistributedOptimizer(
                 optimizer,
-                named_parameters=_filter_named_parameters(self.lightning_module, optimizer),
-                compression=hvd.Compression.none,
+                _filter_named_parameters(self.lightning_module, optimizer),
+                hvd.Compression.none,
             ) for optimizer in optimizers
         ]
         self.lightning_module.trainer.accelerator.optimizers = optimizers

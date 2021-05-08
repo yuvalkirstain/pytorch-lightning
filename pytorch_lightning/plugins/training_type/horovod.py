@@ -92,7 +92,9 @@ class HorovodPlugin(ParallelPlugin):
         # Horovod: wrap optimizers to perform gradient aggregation via allreduce
         optimizers = [
             hvd.DistributedOptimizer(
-                optimizer, named_parameters=_filter_named_parameters(self.lightning_module, optimizer)
+                optimizer,
+                named_parameters=_filter_named_parameters(self.lightning_module, optimizer),
+                compression=hvd.Compression.none,
             ) for optimizer in optimizers
         ]
         self.lightning_module.trainer.accelerator.optimizers = optimizers

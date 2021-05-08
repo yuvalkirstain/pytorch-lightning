@@ -58,7 +58,7 @@ def run():
         max_epochs=5,
         weights_summary=None,
         accelerator="horovod",
-        gpus=2,
+        gpus=1,
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
     trainer.test(model, test_dataloaders=test_data)

@@ -19,6 +19,12 @@ def main():
         rank=args.global_rank,
     )
     time.sleep(5)
+
+    x = torch.tensor([args.global_rank])
+    print("broadcast", x)
+    torch.distributed.broadcast(x, src=0)
+    print(x)
+
     print("barrier")
     torch.distributed.barrier()
 

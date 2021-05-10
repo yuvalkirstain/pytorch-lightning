@@ -14,7 +14,7 @@ def main():
 
     print("init")
     print("rank", int(os.environ.get("RANK", args.global_rank)))
-    print("world size", int(os.environ.get("WORLD_SIZE", None)))
+    print("world size", int(os.environ.get("WORLD_SIZE", -1)))
     torch.distributed.init_process_group(
         backend="nccl",
         init_method="tcp://10.10.10.22:1191",

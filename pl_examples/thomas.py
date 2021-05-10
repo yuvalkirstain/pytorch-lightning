@@ -1,7 +1,7 @@
 import os
 
 import torch.distributed
-
+import time
 
 def main():
     import argparse
@@ -21,6 +21,7 @@ def main():
         world_size=2,
         rank=args.global_rank,
     )
+    time.sleep(5)
     print("barrier")
     torch.distributed.barrier()
 

@@ -20,7 +20,7 @@ def main():
     )
     time.sleep(5)
 
-    x = torch.tensor([args.global_rank]).to("cuda", 0)
+    x = torch.tensor([args.global_rank]).cuda(0)
     print("broadcast", x)
     torch.distributed.broadcast(x, src=0)
     print(x)

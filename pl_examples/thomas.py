@@ -13,8 +13,8 @@ def main():
     torch.cuda.set_device(args.local_rank)
 
     print("init")
-    print("rank", int(os.environ["RANK"]))
-    print("world size", int(os.environ["WORLD_SIZE"]))
+    print("rank", int(os.environ.get("RANK", args.global_rank)))
+    print("world size", int(os.environ.get("WORLD_SIZE", None)))
     torch.distributed.init_process_group(
         backend="nccl",
         init_method="tcp://10.10.10.22:1191",

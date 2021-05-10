@@ -1,10 +1,9 @@
-import os
-
 import torch.distributed
 import time
+import argparse
 
 def main():
-    import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--local_rank", type=int)
     parser.add_argument("--global_rank", type=int)
@@ -13,8 +12,6 @@ def main():
     torch.cuda.set_device(args.local_rank)
 
     print("init")
-    print("rank", int(os.environ.get("RANK", args.global_rank)))
-    print("world size", int(os.environ.get("WORLD_SIZE", -1)))
     torch.distributed.init_process_group(
         backend="nccl",
         init_method="tcp://10.10.10.22:1191",
@@ -24,6 +21,8 @@ def main():
     time.sleep(5)
     print("barrier")
     torch.distributed.barrier()
+
+    print("after barrier")
 
 
 if __name__ == "__main__":

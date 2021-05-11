@@ -4,7 +4,6 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 from pytorch_lightning import LightningModule, Trainer
-import horovod.torch as hvd
 
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -39,10 +38,6 @@ class BoringModel(LightningModule):
     def validation_step(self, batch, batch_idx):
         loss = self(batch).sum()
         self.log("valid_loss", loss)
-
-    def test_step(self, batch, batch_idx):
-        loss = self(batch).sum()
-        self.log("test_loss", loss)
 
     def configure_optimizers(self):
         return torch.optim.SGD(self.layer.parameters(), lr=0.1)

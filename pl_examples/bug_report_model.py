@@ -6,6 +6,8 @@ from torch.utils.data import DataLoader, Dataset
 from pytorch_lightning import LightningModule, Trainer
 import horovod.torch as hvd
 
+from pytorch_lightning.callbacks import ModelCheckpoint
+
 
 class RandomDataset(Dataset):
 
@@ -59,6 +61,7 @@ def run():
         weights_summary=None,
         accelerator="horovod",
         gpus=1,
+        callbacks=ModelCheckpoint(dirpath="./lightning_logs/horovod", save_top_k=3, save_last=True, monitor="valid_loss")
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
 

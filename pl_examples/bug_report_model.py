@@ -50,6 +50,9 @@ def run():
     train_data = DataLoader(RandomDataset(32, 64), batch_size=2)
     val_data = DataLoader(RandomDataset(32, 64), batch_size=2)
     test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
+
+    hvd.init()
+    
     model = BoringModel()
 
     def _filter_named_parameters(model, optimizer):

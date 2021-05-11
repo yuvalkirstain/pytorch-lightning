@@ -20,9 +20,9 @@ def main():
     )
     time.sleep(5)
 
-    x = torch.tensor([args.global_rank]).cuda(0)
+    x = torch.tensor([args.global_rank], dtype=torch.float, device=torch.device("cuda", 0))
     print("broadcast", x)
-    torch.distributed.broadcast(x, src=0)
+    torch.distributed.all_reduce(x)
     print(x)
 
     print("barrier")

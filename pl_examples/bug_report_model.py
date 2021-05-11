@@ -52,7 +52,7 @@ def run():
     test_data = DataLoader(RandomDataset(32, 64), batch_size=2)
 
     # hvd.init()
-    
+
     model = BoringModel()
 
     # def _filter_named_parameters(model, optimizer):
@@ -77,7 +77,7 @@ def run():
         gpus=1,
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
-    trainer.test(model, test_dataloaders=test_data)
+    # trainer.test(model, test_dataloaders=test_data)
 
 
 if __name__ == '__main__':

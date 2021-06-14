@@ -42,10 +42,6 @@ PyTorch Lightning Documentation
 
    extensions/accelerators
    extensions/callbacks
-   extensions/datamodules
-   extensions/logging
-   extensions/metrics
-   extensions/plugins
 
 
 .. toctree::

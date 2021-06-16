@@ -625,6 +625,11 @@ class AcceleratorConnector(object):
             self._set_horovod_backend()
 
         using_valid_distributed = self.use_ddp or self.use_ddp2
+        print("USE DDP", self.use_ddp)
+        print("NUM NODES", self.num_nodes)
+        print("DEVICE TYPE", self._device_type)
+        print("DISTRIBUTED BACKEND", self.distributed_backend)
+        print("ACCELERATOR", self.accelerator)
         if self.num_nodes > 1 and not using_valid_distributed:
             # throw error to force user to choose a supported distributed type such as ddp or ddp2
             raise MisconfigurationException(

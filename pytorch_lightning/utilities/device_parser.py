@@ -85,7 +85,6 @@ def parse_gpu_ids(gpus: Optional[Union[int, str, List[int]]]) -> Optional[List[i
         local_world_size = os.environ.get('LOCAL_WORLD_SIZE', None)
         if local_world_size:
             print("LOCAL WORLD SIZE", local_world_size)
-            gpus = range(int(local_world_size))
     else:
         gpus = _sanitize_gpu_ids(gpus)
 

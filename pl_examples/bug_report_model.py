@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning.plugins import DeepSpeedPlugin
 
 
 class RandomDataset(Dataset):
@@ -58,8 +59,8 @@ def run():
         num_sanity_val_steps=0,
         max_epochs=1,
         weights_summary=None,
-        gpus=8,
-        accelerator='ddp'
+        gpus=1,
+        plugins=DeepSpeedPlugin()
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)
     trainer.test(model, test_dataloaders=test_data)

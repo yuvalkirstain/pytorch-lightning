@@ -348,7 +348,12 @@ class AcceleratorConnector(object):
 
     @property
     def is_training_type_in_plugins(self) -> bool:
-        return any(isinstance(plug, str) and plug in TrainingTypePluginsRegistry for plug in self.plugins)
+        is_alias = any(isinstance(plug, str) and plug in TrainingTypePluginsRegistry for plug in self.plugins)
+        is_object = any(
+            isinstance(plug, registry['plugin']) for registry in TrainingTypePluginsRegistry.values()
+            for plug in self.plugins
+        )
+        return is_alias or is_object
 
     @property
     def is_using_torchelastic(self) -> bool:
@@ -625,7 +630,9 @@ class AcceleratorConnector(object):
             self._set_horovod_backend()
 
         using_valid_distributed = self.use_ddp or self.use_ddp2
-        print("IS RTAINING TYPE", self.is_training_type_in_plugins)
+        print("IS Training TYPE", self.is_training_type_in_plugins)
+        import pdb
+        pdb.set_trace()
         if self.num_nodes > 1 and not using_valid_distributed and not self.is_training_type_in_plugins:
             # throw error to force user to choose a supported distributed type such as ddp or ddp2
             raise MisconfigurationException(

@@ -625,7 +625,7 @@ class AcceleratorConnector(object):
             self._set_horovod_backend()
 
         using_valid_distributed = self.use_ddp or self.use_ddp2
-        if self.num_nodes > 1 and not using_valid_distributed:
+        if self.num_nodes > 1 and not using_valid_distributed and not self.is_training_type_in_plugins:
             # throw error to force user to choose a supported distributed type such as ddp or ddp2
             raise MisconfigurationException(
                 'Your chosen distributed type does not support num_nodes > 1. '

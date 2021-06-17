@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import operator
+import os
 from typing import Any, List, MutableSequence, Optional, Tuple, Union
 
 import torch
 
+from pytorch_lightning.plugins.environments import TorchElasticEnvironment
 from pytorch_lightning.utilities import _TPU_AVAILABLE, rank_zero_warn
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from pytorch_lightning.utilities.imports import _compare_version
@@ -78,7 +80,14 @@ def parse_gpu_ids(gpus: Optional[Union[int, str, List[int]]]) -> Optional[List[i
     gpus = _normalize_parse_gpu_input_to_list(gpus)
     if not gpus:
         raise MisconfigurationException("GPUs requested but none are available.")
-    gpus = _sanitize_gpu_ids(gpus)
+
+    if TorchElasticEnvironment.is_using_torchelastic():
+        local_world_size = os.environ.get('LOCAL_WORLD_SIZE', None)
+        if local_world_size:
+            print("LOCAL WORLD SIZE", local_world_size)
+            gpus = range(int(local_world_size))
+    else:
+        gpus = _sanitize_gpu_ids(gpus)
 
     return gpus
 

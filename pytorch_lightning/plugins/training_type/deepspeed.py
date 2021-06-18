@@ -478,14 +478,8 @@ class DeepSpeedPlugin(DDPPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
-        print("WORLD SIZE", self.world_size)
-        print("GLOBAL RANK", self.global_rank)
         distributed_sampler_kwargs = dict(num_replicas=self.world_size, rank=self.global_rank)
         return distributed_sampler_kwargs
-
-    @property
-    def is_distributed(self):
-        return True
 
     def init_optimizers(self, trainer: 'pl.Trainer', model: 'pl.LightningModule') -> Tuple[List, List, List]:
         # Skip initializing optimizers here as DeepSpeed handles optimizers via config.

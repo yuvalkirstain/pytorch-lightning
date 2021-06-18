@@ -118,6 +118,10 @@ class DDPPlugin(ParallelPlugin):
         self._sync_batchnorm = sync_batchnorm
 
     @property
+    def is_distributed(self):
+        return True
+
+    @property
     def distributed_sampler_kwargs(self):
         distributed_sampler_kwargs = dict(num_replicas=(self.num_nodes * self.num_processes), rank=self.global_rank)
         return distributed_sampler_kwargs

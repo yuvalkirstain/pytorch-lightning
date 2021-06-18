@@ -138,6 +138,9 @@ class IPUPlugin(ParallelPlugin):
         opts.replicationFactor(self.replication_factor)
         gradient_accumulation = self.lightning_module.trainer.accumulate_grad_batches if training else 1
         opts.Training.gradientAccumulation(gradient_accumulation)
+        opts.autoRoundNumIPUs(True)
+        strategy = poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement)
+        opts.setExecutionStrategy(strategy)
 
         if os.environ.get("PL_GLOBAL_SEED"):
             opts.randomSeed(int(os.environ["PL_GLOBAL_SEED"]))

@@ -55,11 +55,11 @@ def run():
     trainer = Trainer(
         default_root_dir=os.getcwd(),
         limit_train_batches=1,
-        limit_val_batches=1,
         num_sanity_val_steps=0,
         max_epochs=1,
         weights_summary=None,
-        gpus=1,
+        gpus=8,
+        precision=16,
         plugins=DeepSpeedPlugin()
     )
     trainer.fit(model, train_dataloader=train_data, val_dataloaders=val_data)

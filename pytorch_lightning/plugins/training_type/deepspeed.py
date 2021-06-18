@@ -478,6 +478,8 @@ class DeepSpeedPlugin(DDPPlugin):
 
     @property
     def distributed_sampler_kwargs(self):
+        print("WORLD SIZE", self.world_size)
+        print("GLOBAL RANK", self.global_rank)
         distributed_sampler_kwargs = dict(num_replicas=self.world_size, rank=self.global_rank)
         return distributed_sampler_kwargs
 

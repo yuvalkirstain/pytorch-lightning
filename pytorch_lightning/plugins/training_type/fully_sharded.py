@@ -107,11 +107,6 @@ class FullyShardedPlugin(DDPPlugin):
                 "Full Sharded Training is not available. Install the latest FairScale via `pip install fairscale -U`"
             )
 
-        if module_wrap or module_auto_wrap:
-            raise MisconfigurationException(
-                "Currently wrapping the ``LightningModule`` in the plugin is not supported. "
-                "Please wrap your model manually in the ``configure_sharded_model`` function"
-            )
         super().__init__(parallel_devices, num_nodes, cluster_environment, sync_batchnorm)
         self.cpu_offload = cpu_offload
         self.move_grads_to_cpu = move_grads_to_cpu

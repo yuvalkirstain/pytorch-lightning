@@ -55,6 +55,7 @@ for accumulation, max_steps in settings:
         accumulate_grad_batches=accumulation,
         log_every_n_steps=50,
         max_steps=max_steps,
+        gpus=1,
     )
     trainer.profiler.dirpath = "lightning_logs"
     trainer.profiler.filename = f'fprofiler_accumulation_{accumulation}_{max_steps}'

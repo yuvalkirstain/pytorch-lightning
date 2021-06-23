@@ -1,3 +1,5 @@
+import time
+
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -18,6 +20,9 @@ class LitAutoEncoder(pl.LightningModule):
         embedding = self.encoder(x)
         return embedding
 
+    def on_train_batch_start(self, *args, **kwargs):
+        self._start = time.monotonic()
+
     def training_step(self, batch, batch_idx):
         x, y = batch
         x = x.view(x.size(0), -1)
@@ -27,6 +32,10 @@ class LitAutoEncoder(pl.LightningModule):
         self.log('train_loss', loss)
         # self.trainer.profiler.describe()  # why was this here??
         return loss
+
+    def on_train_batch_end(self, *args, **kwargs):
+        delta = time.monotonic() - self._start
+        self.log("time", delta, on_step=True, on_epoch=False)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
@@ -41,12 +50,12 @@ autoencoder = LitAutoEncoder()
 
 settings = [
     # accumulation, max_steps
-    (1, 1000),
-    (4, 250),
-    (8, 125),
-    (8, 250),
-    (8, 500),
-    (8, 1000),
+    (1, 10000),
+    (4, 2500),
+    (8, 1250),
+    (8, 2500),
+    (8, 5000),
+    (8, 10000),
 ]
 
 for accumulation, max_steps in settings:

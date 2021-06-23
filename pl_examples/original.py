@@ -1,4 +1,6 @@
 import os
+import time
+
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -6,6 +8,8 @@ from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
+
 
 class LitAutoEncoder(pl.LightningModule):
 
@@ -30,6 +34,13 @@ class LitAutoEncoder(pl.LightningModule):
         self.trainer.profiler.describe()
         return loss
 
+    def on_train_batch_start(self, *args, **kwargs):
+        self._start = time.monotonic()
+
+    def on_train_batch_end(self, *args, **kwargs):
+        delta = time.monotonic() - self._start
+        self.log("time", delta, on_step=True, on_epoch=False)
+
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
@@ -38,8 +49,10 @@ class LitAutoEncoder(pl.LightningModule):
 dataset = MNIST(os.getcwd(), download=True, transform=transforms.ToTensor())
 train, val = random_split(dataset, [55000, 5000])
 
+logger = WandbLogger(project="accumulation-perf", name="orig")
+
 autoencoder = LitAutoEncoder()
-trainer = pl.Trainer(profiler="simple", accumulate_grad_batches=4, gpus=1, log_every_n_steps=50, distributed_backend='ddp',)
+trainer = pl.Trainer(logger=logger, profiler="simple", accumulate_grad_batches=4, gpus=1, log_every_n_steps=50, distributed_backend='ddp',)
 trainer.profiler.dirpath = "lightning_logs"
 trainer.profiler.filename = f'fprofiler_accumulation_orig'
 trainer.fit(autoencoder, DataLoader(train), DataLoader(val))

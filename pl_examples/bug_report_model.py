@@ -7,6 +7,7 @@ from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 import pytorch_lightning as pl
+from pytorch_lightning.loggers import WandbLogger
 
 
 class LitAutoEncoder(pl.LightningModule):
@@ -47,6 +48,7 @@ train, val = random_split(dataset, [55000, 5000])
 
 autoencoder = LitAutoEncoder()
 
+logger = WandbLogger(project="accumulation-perf")
 
 settings = [
     # accumulation, max_steps
@@ -60,6 +62,7 @@ settings = [
 
 for accumulation, max_steps in settings:
     trainer = pl.Trainer(
+        logger=logger,
         profiler="simple",
         accumulate_grad_batches=accumulation,
         log_every_n_steps=50,

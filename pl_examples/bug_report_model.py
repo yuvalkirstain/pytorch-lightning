@@ -52,12 +52,12 @@ logger = WandbLogger(project="accumulation-perf")
 
 settings = [
     # accumulation, max_steps
-    (1, 10000),
-    (4, 2500),
-    (8, 1250),
-    (8, 2500),
-    (8, 5000),
-    (8, 10000),
+    # (1, 10000),
+    (4, 2500000),
+    # (8, 1250),
+    # (8, 2500),
+    # (8, 5000),
+    # (8, 10000),
 ]
 
 for accumulation, max_steps in settings:

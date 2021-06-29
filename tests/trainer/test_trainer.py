@@ -1952,6 +1952,15 @@ def test_cloud_fit_local(tmpdir):
 
 
 @RunIf(grid=True)
+def test_upload_to_grid(tmpdir):
+    from grid.pytorch_lightning.callbacks.upload import Upload2Grid
+    trainer = Trainer(
+        default_root_dir=tmpdir, max_epochs=1, limit_train_batches=2, logger=True, gpus=1, upload_to_grid=True
+    )
+    assert isinstance(trainer.callbacks[0], Upload2Grid)
+
+
+@RunIf(grid=True)
 def test_cloud_fit_on_run(tmpdir):
 
     from grid.pytorch_lightning import GridConfig

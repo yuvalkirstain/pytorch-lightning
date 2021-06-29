@@ -1941,6 +1941,8 @@ def test_exception_when_lightning_module_is_not_set_on_trainer():
 
 @RunIf(grid=True)
 def test_cloud_fit_local(tmpdir):
+    from pytorch_lightning import GridConfig
+    assert GridConfig is not None
     model = BoringModel()
     before_params = deepcopy(model.state_dict())
     trainer = Trainer(default_root_dir=tmpdir, max_epochs=1, limit_train_batches=2, logger=True, gpus=1)

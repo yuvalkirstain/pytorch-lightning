@@ -1943,7 +1943,7 @@ def test_exception_when_lightning_module_is_not_set_on_trainer():
 def test_cloud_fit_local(tmpdir):
     model = BoringModel()
     before_params = deepcopy(model.state_dict())
-    trainer = Trainer(default_root_dir=tmpdir, max_epochs=1, limit_train_batches=2, logger=True)
+    trainer = Trainer(default_root_dir=tmpdir, max_epochs=1, limit_train_batches=2, logger=True, gpus=1)
     trainer.cloud_fit(model, local=True)
     after_params = model.state_dict()
     assert all(not torch.equal(bp, ap) for bp, ap in zip(before_params.values(), after_params.values()))

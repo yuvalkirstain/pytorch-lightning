@@ -20,6 +20,9 @@ from pytorch_lightning.plugins.environments import TorchElasticEnvironment
 from pytorch_lightning.utilities import _TPU_AVAILABLE, rank_zero_deprecation
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from pytorch_lightning.utilities.imports import _compare_version
+from pytorch_lightning.utilities.warnings import WarningCache
+
+wc = WarningCache()
 
 
 def determine_root_gpu_device(gpus: List[int]) -> Optional[int]:
@@ -44,7 +47,7 @@ def determine_root_gpu_device(gpus: List[int]) -> Optional[int]:
     return root_gpu
 
 
-def parse_gpu_ids(gpus: Optional[Union[int, str, List[int]]]) -> Optional[List[int]]:
+def parse_gpu_ids(gpus: Optional[Union[int, str, List[int]]], should_raise: bool = True) -> Optional[List[int]]:
     """
     Parses the GPU ids given in the format as accepted by the
     :class:`~pytorch_lightning.trainer.Trainer`.
@@ -78,7 +81,10 @@ def parse_gpu_ids(gpus: Optional[Union[int, str, List[int]]]) -> Optional[List[i
     gpus = _normalize_parse_gpu_string_input(gpus)
     gpus = _normalize_parse_gpu_input_to_list(gpus)
     if not gpus:
-        raise MisconfigurationException("GPUs requested but none are available.")
+        if should_raise:
+            raise MisconfigurationException("GPUs requested but none are available.")
+        else:
+            wc.warn("GPUs requested but none are available.")
 
     if TorchElasticEnvironment.is_using_torchelastic() and len(gpus) != 1 and len(_get_all_available_gpus()) == 1:
         # omit sanity check on torchelastic as by default shows one visible GPU per process
@@ -137,7 +143,7 @@ def _normalize_parse_gpu_string_input(s: Union[int, str, List[int]]) -> Union[in
         return num_gpus
 
 
-def _sanitize_gpu_ids(gpus: List[int]) -> List[int]:
+def _sanitize_gpu_ids(gpus: List[int], should_raise: bool = True) -> List[int]:
     """
     Checks that each of the GPUs in the list is actually available.
     Raises a MisconfigurationException if any of the GPUs is not available.
@@ -151,9 +157,12 @@ def _sanitize_gpu_ids(gpus: List[int]) -> List[int]:
     all_available_gpus = _get_all_available_gpus()
     for gpu in gpus:
         if gpu not in all_available_gpus:
-            raise MisconfigurationException(
-                f"You requested GPUs: {gpus}\n But your machine only has: {all_available_gpus}"
-            )
+            if should_raise:
+                raise MisconfigurationException(
+                    f"You requested GPUs: {gpus}\n But your machine only has: {all_available_gpus}"
+                )
+            else:
+                wc.warn(f"You requested GPUs: {gpus}\n But your machine only has: {all_available_gpus}")
     return gpus
 
 

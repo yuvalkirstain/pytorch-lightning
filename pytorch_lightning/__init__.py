@@ -4,6 +4,7 @@ import logging
 import os
 
 from pytorch_lightning.__about__ import *  # noqa: F401 F403
+from pytorch_lightning.utilities.imports import _GRID_AVAILABLE
 
 _root_logger = logging.getLogger()
 _logger = logging.getLogger(__name__)
@@ -31,6 +32,10 @@ __all__ = [
     'seed_everything',
     'metrics',
 ]
+
+if _GRID_AVAILABLE:
+    from grid.pytorch_lightning import GridConfig
+    __all__ += ["GridConfig"]
 
 # for compatibility with namespace packages
 __import__('pkg_resources').declare_namespace(__name__)

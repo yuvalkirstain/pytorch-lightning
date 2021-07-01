@@ -19,11 +19,13 @@ python simple_image_classifier.py --trainer.max_epochs=50
 """
 
 import torch
+from sparseml.pytorch.optim import ScheduledModifierManager
 from torch.nn import functional as F
 
 import pytorch_lightning as pl
 from pl_examples import cli_lightning_logo
 from pl_examples.basic_examples.mnist_datamodule import MNISTDataModule
+from pytorch_lightning import Callback, LightningModule, Trainer
 from pytorch_lightning.utilities.cli import LightningCLI
 
 
@@ -75,8 +77,52 @@ class LitClassifier(pl.LightningModule):
         return torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
 
 
+class SparseMLCallback(Callback):
+
+    def __init__(self, recipe_path: str):
+        self.recipe_path = recipe_path
+        self.manager = ScheduledModifierManager.from_yaml(self.recipe_path)
+
+    def on_fit_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
+        steps_per_epoch = self.num_training_steps_per_epoch(trainer)
+        trainer.optimizers = [
+            self.manager.modify(pl_module, optimizer, steps_per_epoch, epoch=0) for optimizer in trainer.optimizers
+        ]
+
+    def num_training_steps_per_epoch(self, trainer: Trainer) -> int:
+        """Total training steps inferred from datamodule and devices."""
+        if isinstance(trainer.limit_train_batches, int) and trainer.limit_train_batches != 0:
+            dataset_size = trainer.limit_train_batches
+        elif isinstance(trainer.limit_train_batches, float):
+            # limit_train_batches is a percentage of batches
+            dataset_size = len(trainer.datamodule.train_dataloader())
+            dataset_size = int(dataset_size * trainer.limit_train_batches)
+        else:
+            dataset_size = len(trainer.datamodule.train_dataloader())
+
+        num_devices = max(1, trainer.num_gpus, trainer.num_processes)
+        if trainer.tpu_cores:
+            num_devices = max(num_devices, trainer.tpu_cores)
+
+        effective_batch_size = trainer.accumulate_grad_batches * num_devices
+        max_estimated_steps = (dataset_size // effective_batch_size)
+
+        if trainer.max_steps and trainer.max_steps < max_estimated_steps:
+            return trainer.max_steps
+        return max_estimated_steps
+
+    def on_train_end(self, trainer: 'pl.Trainer', pl_module: 'pl.LightningModule') -> None:
+        self.manager.finalize(pl_module)
+
+
 def cli_main():
-    cli = LightningCLI(LitClassifier, MNISTDataModule, seed_everything_default=1234, save_config_overwrite=True)
+    cli = LightningCLI(
+        LitClassifier,
+        MNISTDataModule,
+        seed_everything_default=1234,
+        save_config_overwrite=True,
+        trainer_defaults={'callbacks': SparseMLCallback('config.yaml')}
+    )
     cli.trainer.test(cli.model, datamodule=cli.datamodule)
 
 

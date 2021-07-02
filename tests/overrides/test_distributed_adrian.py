@@ -10,6 +10,10 @@ from pytorch_lightning import LightningModule, Trainer, seed_everything
 class RandomDataset(Dataset):
 
     def __getitem__(self, index):
+        # 0.{random digits}
+        # 1.{random digits}
+        # 2.{random digits}
+        # ...
         return torch.rand(1) + index
 
     def __len__(self):
@@ -40,7 +44,7 @@ class RandomLightningModule(LightningModule):
         return Adam(self.parameters())
 
 
-if __name__ == "__main__":
+def test_fastforward_sampler_and_dataset(tmpdir):
     print("initial training")
     seed_everything(1)
     model = RandomLightningModule()
@@ -51,7 +55,7 @@ if __name__ == "__main__":
     indices = [int(x) for x in torch.cat(model.recorded_samples).floor()]
     assert indices == [0, 1, 2, 3, 4, 5]
 
-    ckpt_file = os.path.join(trainer.default_root_dir, "one.ckpt")
+    ckpt_file = os.path.join(tmpdir, "one.ckpt")
     trainer.save_checkpoint(ckpt_file)
 
     print("resuming")

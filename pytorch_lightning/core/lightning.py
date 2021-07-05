@@ -116,49 +116,39 @@ class LightningModule(
         self._param_requires_grad_state = dict()
         self._metric_attributes: Optional[Dict[int, str]] = None
 
-    def optimizers(self, use_pl_optimizer: bool = True) -> Union[Optimizer, List[Optimizer], List[LightningOptimizer]]:
+    @property
+    def hparams(self) -> Union[AttributeDict, dict, Namespace]:
         """
-        Returns the optimizer(s) that are being used during training. Useful for manual optimization.
-
-        Args:
-            use_pl_optimizer: If ``True``, will wrap the optimizer(s) in a
-                :class:`~pytorch_lightning.core.optimizer.LightningOptimizer` for automatic handling of precision and
-                profiling.
-
-        Returns:
-            A single optimizer, or a list of optimizers in case multiple ones are present.
+        The collection of hyperparameters saved with :meth:`save_hyperparameters`. It is mutable by the user.
+        For the frozen set of initial hyperparameters, use :attr:`hparams_initial`.
         """
-        if use_pl_optimizer:
-            opts = list(self.trainer.lightning_optimizers.values())
-        else:
-            opts = self.trainer.optimizers
+        if not hasattr(self, "_hparams"):
+            self._hparams = AttributeDict()
+        return self._hparams
 
-        # single optimizer
-        if isinstance(opts, list) and len(opts) == 1 and isinstance(opts[0], Optimizer):
-            return opts[0]
-        # multiple opts
-        return opts
-
-    def lr_schedulers(self) -> Optional[Union[Any, List[Any]]]:
+    @property
+    def hparams_initial(self) -> AttributeDict:
         """
-        Returns the learning rate scheduler(s) that are being used during training. Useful for manual optimization.
-
-        Returns:
-            A single scheduler, or a list of schedulers in case multiple ones are present, or ``None`` if no
-            schedulers were returned in :meth:`configure_optimizers`.
+        The collection of hyperparameters saved with :meth:`save_hyperparameters`. These contents are read-only.
+        Manual updates to the saved hyperparameters can instead be performed through :attr:`hparams`.
         """
-        if not self.trainer.lr_schedulers:
-            return None
+        if not hasattr(self, "_hparams_initial"):
+            return AttributeDict()
+        # prevent any change
+        return copy.deepcopy(self._hparams_initial)
 
-        # ignore other keys "interval", "frequency", etc.
-        lr_schedulers = [s["scheduler"] for s in self.trainer.lr_schedulers]
-
-        # single scheduler
-        if len(lr_schedulers) == 1:
-            return lr_schedulers[0]
-
-        # multiple schedulers
-        return lr_schedulers
+    @property
+    def model_size(self) -> float:
+        """
+        The model's size in megabytes. The computation includes everything in the
+        :meth:`~torch.nn.Module.state_dict`, i.e., by default the parameteters and buffers.
+        """
+        # todo: think about better way without need to dump model to drive
+        tmp_name = f"{uuid.uuid4().hex}.pt"
+        torch.save(self.state_dict(), tmp_name)
+        size_mb = os.path.getsize(tmp_name) / 1e6
+        os.remove(tmp_name)
+        return size_mb
 
     @property
     def example_input_array(self) -> Any:
@@ -285,6 +275,50 @@ class LightningModule(
 
         batch = self.on_after_batch_transfer(batch, dataloader_idx)
         return batch
+
+    def optimizers(self, use_pl_optimizer: bool = True) -> Union[Optimizer, List[Optimizer], List[LightningOptimizer]]:
+        """
+        Returns the optimizer(s) that are being used during training. Useful for manual optimization.
+
+        Args:
+            use_pl_optimizer: If ``True``, will wrap the optimizer(s) in a
+                :class:`~pytorch_lightning.core.optimizer.LightningOptimizer` for automatic handling of precision and
+                profiling.
+
+        Returns:
+            A single optimizer, or a list of optimizers in case multiple ones are present.
+        """
+        if use_pl_optimizer:
+            opts = list(self.trainer.lightning_optimizers.values())
+        else:
+            opts = self.trainer.optimizers
+
+        # single optimizer
+        if isinstance(opts, list) and len(opts) == 1 and isinstance(opts[0], Optimizer):
+            return opts[0]
+        # multiple opts
+        return opts
+
+    def lr_schedulers(self) -> Optional[Union[Any, List[Any]]]:
+        """
+        Returns the learning rate scheduler(s) that are being used during training. Useful for manual optimization.
+
+        Returns:
+            A single scheduler, or a list of schedulers in case multiple ones are present, or ``None`` if no
+            schedulers were returned in :meth:`configure_optimizers`.
+        """
+        if not self.trainer.lr_schedulers:
+            return None
+
+        # ignore other keys "interval", "frequency", etc.
+        lr_schedulers = [s["scheduler"] for s in self.trainer.lr_schedulers]
+
+        # single scheduler
+        if len(lr_schedulers) == 1:
+            return lr_schedulers[0]
+
+        # multiple schedulers
+        return lr_schedulers
 
     def print(self, *args, **kwargs) -> None:
         r"""
@@ -2052,40 +2086,6 @@ class LightningModule(
                 torch.jit.save(torchscript_module, f)
 
         return torchscript_module
-
-    @property
-    def hparams(self) -> Union[AttributeDict, dict, Namespace]:
-        """
-        The collection of hyperparameters saved with :meth:`save_hyperparameters`. It is mutable by the user.
-        For the frozen set of initial hyperparameters, use :attr:`hparams_initial`.
-        """
-        if not hasattr(self, "_hparams"):
-            self._hparams = AttributeDict()
-        return self._hparams
-
-    @property
-    def hparams_initial(self) -> AttributeDict:
-        """
-        The collection of hyperparameters saved with :meth:`save_hyperparameters`. These contents are read-only.
-        Manual updates to the saved hyperparameters can instead be performed through :attr:`hparams`.
-        """
-        if not hasattr(self, "_hparams_initial"):
-            return AttributeDict()
-        # prevent any change
-        return copy.deepcopy(self._hparams_initial)
-
-    @property
-    def model_size(self) -> float:
-        """
-        The model's size in megabytes. The computation includes everything in the
-        :meth:`~torch.nn.Module.state_dict`, i.e., by default the parameteters and buffers.
-        """
-        # todo: think about better way without need to dump model to drive
-        tmp_name = f"{uuid.uuid4().hex}.pt"
-        torch.save(self.state_dict(), tmp_name)
-        size_mb = os.path.getsize(tmp_name) / 1e6
-        os.remove(tmp_name)
-        return size_mb
 
     def add_to_queue(self, queue: torch.multiprocessing.SimpleQueue) -> None:
         """

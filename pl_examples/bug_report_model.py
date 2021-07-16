@@ -98,18 +98,20 @@ def run(precision=32, accumulate_grad_batches=1):
 
 
 if __name__ == '__main__':
+    torch.cuda.reset_accumulated_memory_stats()
+    
     print("first run")
     run()
-    print("memory:", torch.cuda.memory_allocated(), "max:", torch.cuda.max_memory_allocated())
 
     garbage_collection_cuda()
     time.sleep(5)
     torch.cuda.empty_cache()
     garbage_collection_cuda()
     gc.collect()
-
-    print(get_cudas())
+    print("memory:", torch.cuda.memory_allocated(), "max:", torch.cuda.max_memory_allocated())
+    print(get_cudas())  # returns []
 
     print("second run")
     run()
     print("memory:", torch.cuda.memory_allocated(), "max:", torch.cuda.max_memory_allocated())
+    print(get_cudas())  # returns []

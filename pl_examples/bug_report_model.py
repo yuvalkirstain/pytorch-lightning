@@ -2,7 +2,8 @@ import gc
 
 import torch
 from pytorch_lightning.utilities.memory import garbage_collection_cuda
-    import time
+import time
+
 
 def get_model():
     from pytorch_lightning import LightningModule
@@ -77,21 +78,21 @@ def run(precision=32, accumulate_grad_batches=1):
         model = get_model()
         import pytorch_lightning as pl
 
-        trainer = pl.Trainer(logger=True,
-                             gpus='0',
-                             accumulate_grad_batches=accumulate_grad_batches,
-                             log_every_n_steps=1,
-                             precision=precision,
-                             deterministic=True,
-                             max_steps=32,
-                             reload_dataloaders_every_epoch=True,
-                             auto_lr_find=False,
-                             replace_sampler_ddp=True,
-                             terminate_on_nan=False,
-                             auto_scale_batch_size=True,
-                             weights_summary=None,
-                             progress_bar_refresh_rate=0,
-                             )
+        trainer = pl.Trainer(
+            gpus='0',
+            accumulate_grad_batches=accumulate_grad_batches,
+            log_every_n_steps=1,
+            precision=precision,
+            deterministic=True,
+            max_steps=32,
+            reload_dataloaders_every_epoch=True,
+            auto_lr_find=False,
+            replace_sampler_ddp=True,
+            terminate_on_nan=False,
+            auto_scale_batch_size=True,
+            weights_summary=None,
+            progress_bar_refresh_rate=0,
+        )
 
         trainer.fit(model)
 

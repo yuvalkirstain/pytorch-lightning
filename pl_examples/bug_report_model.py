@@ -108,7 +108,7 @@ if __name__ == '__main__':
     garbage_collection_cuda()
     gc.collect()
 
-    get_cudas()
+    print(get_cudas())
 
     print("second run")
     run()

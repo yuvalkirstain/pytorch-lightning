@@ -97,21 +97,24 @@ def run(precision=32, accumulate_grad_batches=1):
         trainer.fit(model)
 
 
-if __name__ == '__main__':
-    torch.cuda.reset_accumulated_memory_stats()
-    
-    print("first run")
-    run()
-
+def collect_garbage():
     garbage_collection_cuda()
     time.sleep(5)
     torch.cuda.empty_cache()
     garbage_collection_cuda()
     gc.collect()
+
+
+if __name__ == '__main__':
+    print("first run")
+    torch.cuda.reset_accumulated_memory_stats()
+    run()
+    collect_garbage()
     print("memory:", torch.cuda.memory_allocated(), "max:", torch.cuda.max_memory_allocated())
     print(get_cudas())  # returns []
 
     print("second run")
+    torch.cuda.reset_accumulated_memory_stats()
     run()
+    collect_garbage()
     print("memory:", torch.cuda.memory_allocated(), "max:", torch.cuda.max_memory_allocated())
-    print(get_cudas())  # returns []

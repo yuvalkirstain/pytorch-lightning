@@ -2,3 +2,4 @@
 	path = _notebooks
 	url = https://github.com/PyTorchLightning/lightning-tutorials.git
 	branch = publication
+	ignore = dirty

@@ -17,16 +17,19 @@ Test logging in the training loop
 
 import collections
 import itertools
+from enum import Enum
 from re import escape
 
 import numpy as np
 import pytest
 import torch
+from torch.utils.data.dataloader import DataLoader
 from torchmetrics import Accuracy
 
 import pytorch_lightning as pl
 from pytorch_lightning import callbacks, Trainer
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.loggers.base import LightningLoggerBase
 from pytorch_lightning.utilities.exceptions import MisconfigurationException
 from tests.helpers.boring_model import BoringModel, RandomDictDataset
 from tests.helpers.runif import RunIf
@@ -790,3 +793,153 @@ def test_log_gpu_memory_without_logging_on_step(tmpdir):
     trainer.fit(model)
 
     assert 'gpu_id: 1/memory.used (MB)' in trainer.logged_metrics
+
+
+def test_user_logging(tmpdir):
+
+    class Mode(Enum):
+        CustomLog = 1
+        LogDefault = 2
+        LogOnStep = 3
+        LogOnEpoch = 4
+        LogOnBoth = 5
+
+    class ConstantMultiply(pl.LightningModule):
+
+        def __init__(self, mode):
+            super().__init__()
+            self.p = torch.nn.Parameter(torch.tensor([1.0]))
+            assert mode in Mode
+            self.mode = mode
+
+            self.stages = {"train": [], "val": []}
+
+        def forward(self, x):
+            return -self.p
+
+        def _step(self, phase, batch, batch_idx):
+            N = len(batch)
+            p, = self.p.detach().cpu().numpy()
+            batch_print = batch.flatten().cpu().numpy().tolist()
+            print(f"{phase}: N={N}, batch_idx={batch_idx}, batch={batch_print}, p={p}")
+            # Goal here is to get parameter to increment once per batch.
+            loss = self(batch).mean()
+
+            key = f"{phase}/loss"
+            """
+            if self.mode == Mode.CustomLog:
+                self.logger.log_metrics(
+                    {key: loss.detach().cpu().item()},
+                    step=self.global_step,
+                )
+            elif self.mode == Mode.LogDefault:
+                self.log(key, loss)
+            """
+            if self.mode == Mode.LogOnStep:
+                self.log(key, loss, on_step=True, on_epoch=False, logger=True, prog_bar=True)
+            """
+            elif self.mode == Mode.LogOnEpoch:
+                self.log(key, loss, on_step=False, on_epoch=True, logger=True, prog_bar=True)
+            elif self.mode == Mode.LogOnBoth:
+                self.log(key, loss, on_step=True, on_epoch=True, logger=True, prog_bar=True)
+            """
+            self.stages[phase].append(loss)
+            return loss
+
+        def training_step(self, batch, batch_idx):
+            return self._step("train", batch, batch_idx)
+
+        def validation_step(self, batch, batch_idx):
+            return self._step("val", batch, batch_idx)
+
+        def configure_optimizers(self):
+            # Using naive SGD so that we can see parameter increment, hehehhehehehe.
+            optimizer = torch.optim.SGD(self.parameters(), lr=1.0)
+            return optimizer
+
+    class PrintLogger(LightningLoggerBase):
+
+        def __init__(self):
+            super().__init__()
+
+        @property
+        def experiment(self):
+            return "lightning_logs"
+
+        def log_metrics(self, metrics, step):
+            print(f"  log[step={step}]: {metrics}")
+
+        def log_hyperparams(self, params):
+            pass
+
+        @property
+        def name(self):
+            return self.experiment
+
+        @property
+        def version(self):
+            return 0
+
+    @torch.no_grad()
+    def create_dataset(count):
+        # These values don't actually matter.
+        xs = [torch.tensor([float(i)]) for i in range(count)]
+        return xs
+
+    def main():
+        count = 4
+        dataset = create_dataset(count)
+        N = 2
+        dataloader = DataLoader(dataset, batch_size=N, shuffle=False)
+        num_batches = len(dataloader)
+
+        for mode in Mode:
+            logger = PrintLogger()
+            # Recreate trainer each time.
+            trainer = pl.Trainer(
+                max_epochs=1,
+                progress_bar_refresh_rate=0,
+                logger=logger,
+                flush_logs_every_n_steps=num_batches,
+                weights_summary=None,
+                num_sanity_val_steps=0,
+            )
+            print(f"mode={mode}")
+            model = ConstantMultiply(mode)
+            trainer.fit(
+                model,
+                train_dataloader=dataloader,
+                val_dataloaders=dataloader,
+            )
+
+            assert model.stages["train"][0] == -1
+            assert model.stages["train"][1] == -2
+            assert model.stages["val"][0] == -3
+            assert model.stages["val"][1] == -3
+
+            if False and mode == Mode.LogDefault:
+                assert trainer.callback_metrics["train/loss"] == model.stages["train"][1]
+                assert trainer.callback_metrics["val/loss"] == model.stages["val"][1]
+
+            elif mode == Mode.LogOnStep:
+                breakpoint()
+                assert trainer.callback_metrics["train/loss"] == model.stages["train"][1]
+                #assert trainer.callback_metrics["val/loss"] == model.stages["val"][1]
+
+            elif mode == Mode.LogOnEpoch:
+                assert trainer.callback_metrics["train/loss"] == ((model.stages["train"][0] + model.stages["train"][1])
+                                                                  / 2)
+                assert trainer.callback_metrics["val/loss"] == ((model.stages["val"][0] + model.stages["val"][1]) / 2)
+
+            elif mode == Mode.LogOnBoth:
+                assert trainer.callback_metrics["train/loss"] == ((model.stages["train"][0] + model.stages["train"][1])
+                                                                  / 2)
+                assert trainer.callback_metrics["train/loss_step"] == model.stages["train"][1]
+                assert trainer.callback_metrics["val/loss"] == model.stages["val"][1]
+                assert trainer.callback_metrics["val/loss_epoch"] == ((model.stages["val"][0] + model.stages["val"][1])
+                                                                      / 2)
+                assert trainer.callback_metrics["train/loss_epoch"] == (
+                    (model.stages["train"][0] + model.stages["train"][1]) / 2
+                )
+
+    main()

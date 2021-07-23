@@ -27,7 +27,7 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, Progress
 from pytorch_lightning.callbacks.base import Callback
 from pytorch_lightning.callbacks.prediction_writer import BasePredictionWriter
 from pytorch_lightning.core.optimizer import LightningOptimizer
-from pytorch_lightning.loggers import LightningLoggerBase
+from pytorch_lightning.loggers import LightningLoggerBase, TestTubeLogger
 from pytorch_lightning.loggers.base import LoggerCollection
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 from pytorch_lightning.loops import PredictionLoop
@@ -231,7 +231,7 @@ class TrainerProperties(ABC):
     def log_dir(self) -> Optional[str]:
         if self.logger is None:
             dirpath = self.default_root_dir
-        elif isinstance(self.logger, TensorBoardLogger):
+        elif isinstance(self.logger, (TensorBoardLogger, TestTubeLogger)):
             dirpath = self.logger.log_dir
         elif isinstance(self.logger, LoggerCollection):
             dirpath = self.default_root_dir

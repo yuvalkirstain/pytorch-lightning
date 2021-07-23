@@ -15,6 +15,7 @@
 Test Tube Logger
 ----------------
 """
+import os
 from argparse import Namespace
 from typing import Any, Dict, Optional, Union
 
@@ -196,6 +197,11 @@ class TestTubeLogger(LightningLoggerBase):
         return self._save_dir
 
     @property
+    def log_dir(self) -> str:
+        version = self.version if isinstance(self.version, str) else f"version_{self.version}"
+        return os.path.join(self.save_dir, self.name, version)
+
+    @property
     def name(self) -> str:
         if self._experiment is None:
             return self._name
@@ -205,7 +211,7 @@ class TestTubeLogger(LightningLoggerBase):
     @property
     def version(self) -> int:
         if self._experiment is None:
-            return self._version
+            return self._version or 0
 
         return self.experiment.version
 

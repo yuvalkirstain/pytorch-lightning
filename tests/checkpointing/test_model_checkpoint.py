@@ -896,7 +896,8 @@ def test_checkpointing_with_nan_as_first(tmpdir, mode: int):
 
 def test_checkpoint_repeated_strategy(tmpdir):
     """
-    This test validates that the checkpoint can be called when provided to callbacks list
+    This test validates checkpoint can be called several times without
+    increasing internally its global step if nothing run.
     """
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", dirpath=tmpdir, filename="{epoch:02d}")
 
@@ -908,35 +909,28 @@ def test_checkpoint_repeated_strategy(tmpdir):
 
     model = ExtendedBoringModel()
     model.validation_epoch_end = None
-    trainer = Trainer(
-        max_epochs=1,
-        limit_train_batches=2,
-        limit_val_batches=2,
-        limit_test_batches=2,
-        callbacks=[checkpoint_callback],
-        weights_summary=None,
-        progress_bar_refresh_rate=0,
-    )
+    trainer_kwargs = {
+        "max_epochs": 1,
+        "limit_train_batches": 2,
+        "limit_val_batches": 2,
+        "limit_test_batches": 2,
+        "weights_summary": None,
+        "progress_bar_refresh_rate": 0,
+    }
+    trainer = Trainer(**trainer_kwargs, callbacks=[checkpoint_callback])
     trainer.fit(model)
     assert os.listdir(tmpdir) == ["epoch=00.ckpt"]
 
     for idx in range(4):
         # load from checkpoint
-        model = LogInTwoMethods.load_from_checkpoint(checkpoint_callback.best_model_path)
         trainer = pl.Trainer(
-            default_root_dir=tmpdir,
-            max_epochs=1,
-            limit_train_batches=2,
-            limit_val_batches=2,
-            limit_test_batches=2,
-            resume_from_checkpoint=checkpoint_callback.best_model_path,
-            weights_summary=None,
-            progress_bar_refresh_rate=0,
+            **trainer_kwargs, default_root_dir=tmpdir, resume_from_checkpoint=checkpoint_callback.best_model_path
         )
+        model = LogInTwoMethods.load_from_checkpoint(checkpoint_callback.best_model_path)
         trainer.fit(model)
         trainer.test(model, verbose=False)
-    assert set(os.listdir(tmpdir)) == {"epoch=00.ckpt", "lightning_logs"}
-    assert set(os.listdir(tmpdir.join("lightning_logs"))) == {f"version_{i}" for i in range(4)}
+        assert set(os.listdir(tmpdir)) == {"epoch=00.ckpt", "lightning_logs"}
+    assert set(os.listdir(tmpdir / "lightning_logs")) == {f"version_{i}" for i in range(4)}
 
 
 def test_checkpoint_repeated_strategy_extended(tmpdir):

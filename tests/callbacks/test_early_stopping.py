@@ -75,7 +75,7 @@ def test_resume_early_stopping_from_checkpoint(tmpdir):
     # ensure state is persisted properly
     checkpoint = torch.load(checkpoint_filepath)
     # the checkpoint saves "epoch + 1"
-    early_stop_callback_state = early_stop_callback.saved_states[checkpoint["epoch"] - 1]
+    early_stop_callback_state = early_stop_callback.saved_states[checkpoint["epoch"]]
     assert checkpoint["callbacks"][type(early_stop_callback)] == early_stop_callback_state
 
     # ensure state is reloaded properly (assertion in the callback)
@@ -137,7 +137,7 @@ def test_early_stopping_patience(tmpdir, loss_values: list, patience: int, expec
         progress_bar_refresh_rate=0,
     )
     trainer.fit(model)
-    assert trainer.current_epoch == expected_stop_epoch
+    assert trainer.current_epoch - 1 == expected_stop_epoch
 
 
 @pytest.mark.parametrize("validation_step_none", [True, False])
@@ -173,7 +173,7 @@ def test_early_stopping_patience_train(
         progress_bar_refresh_rate=0,
     )
     trainer.fit(model)
-    assert trainer.current_epoch == expected_stop_epoch
+    assert trainer.current_epoch - 1 == expected_stop_epoch
 
 
 def test_pickling(tmpdir):
@@ -224,7 +224,7 @@ def test_early_stopping_thresholds(tmpdir, stopping_threshold, divergence_thesho
     )
     trainer = Trainer(default_root_dir=tmpdir, callbacks=[early_stopping], overfit_batches=0.20, max_epochs=20)
     trainer.fit(model)
-    assert trainer.current_epoch == expected_epoch, "early_stopping failed"
+    assert trainer.current_epoch - 1 == expected_epoch, "early_stopping failed"
 
 
 @pytest.mark.parametrize("stop_value", [torch.tensor(np.inf), torch.tensor(np.nan)])
@@ -242,7 +242,7 @@ def test_early_stopping_on_non_finite_monitor(tmpdir, stop_value):
     early_stopping = EarlyStopping(monitor="val_loss", check_finite=True)
     trainer = Trainer(default_root_dir=tmpdir, callbacks=[early_stopping], overfit_batches=0.20, max_epochs=10)
     trainer.fit(model)
-    assert trainer.current_epoch == expected_stop_epoch
+    assert trainer.current_epoch - 1 == expected_stop_epoch
     assert early_stopping.stopped_epoch == expected_stop_epoch
 
 
@@ -370,7 +370,7 @@ class EarlyStoppingModel(BoringModel):
         self._epoch_end()
 
     def on_train_end(self) -> None:
-        assert self.trainer.current_epoch == self.expected_end_epoch, "Early Stopping Failed"
+        assert self.trainer.current_epoch - 1 == self.expected_end_epoch, "Early Stopping Failed"
 
 
 _ES_CHECK = dict(check_on_train_epoch_end=True)

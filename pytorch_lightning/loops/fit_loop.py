@@ -69,7 +69,7 @@ class FitLoop(Loop):
     @property
     def batch_idx(self) -> int:
         """Returns the number of batches already run within this epoch"""
-        return self.epoch_loop.batch_progress.current.ready - 1
+        return self.epoch_loop.batch_idx
 
     @property
     def split_idx(self) -> int:
@@ -236,7 +236,7 @@ class FitLoop(Loop):
 
     def should_accumulate(self) -> bool:
         """Whether the gradients should be accumulated"""
-        return self.epoch_loop.batch_loop.should_accumulate()
+        return self.epoch_loop._should_accumulate()
 
     def teardown(self) -> None:
         self.epoch_loop.teardown()

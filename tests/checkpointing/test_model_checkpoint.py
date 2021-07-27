@@ -145,7 +145,7 @@ def test_model_checkpoint_score_and_ckpt(
         assert math.isclose(score, expected_score, rel_tol=1e-4)
 
         chk = pl_load(os.path.join(checkpoint.dirpath, expected_filename))
-        assert chk["epoch"] == epoch + 1
+        assert chk["epoch"] == epoch
         assert chk["global_step"] == limit_train_batches * (epoch + 1)
 
         mc_specific_data = chk["callbacks"][type(checkpoint)]
@@ -254,7 +254,7 @@ def test_model_checkpoint_score_and_ckpt_val_check_interval(
         assert math.isclose(score, expected_score, rel_tol=1e-4)
 
         chk = pl_load(os.path.join(checkpoint.dirpath, expected_filename))
-        assert chk["epoch"] == epoch + 1
+        assert chk["epoch"] == epoch
         epoch_num = epoch + duplicated
         expected_global_step = per_val_train_batches * (global_ix + 1) + (leftover_train_batches * epoch_num)
         assert chk["global_step"] == expected_global_step

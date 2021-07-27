@@ -1208,7 +1208,7 @@ def test_ckpt_version_after_rerun_same_trainer(tmpdir):
     trainer.fit_loop.max_epochs = 4
     trainer.fit(BoringModel())
 
-    ckpt_range = range(mc.STARTING_VERSION, trainer.max_epochs + mc.STARTING_VERSION)
+    ckpt_range = range(mc.STARTING_VERSION, trainer.max_epochs + mc.STARTING_VERSION - 1)
     expected = {"test.ckpt", *(f"test-v{i}.ckpt" for i in ckpt_range)}
     # check best_k_models state
     assert {Path(f).name for f in mc.best_k_models} == expected

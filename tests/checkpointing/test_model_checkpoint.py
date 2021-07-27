@@ -893,6 +893,8 @@ def test_checkpointing_with_nan_as_first(tmpdir, mode: int):
     assert trainer.dev_debugger.checkpoint_callback_history[-1]["epoch"] == len(monitor) - 1
 
 
+# FIXME: only BC with fault tolerance enabled
+@mock.patch.dict(os.environ, {"PL_FAULT_TOLERANT_TRAINING": "1"})
 def test_checkpoint_repeated_strategy(tmpdir):
     """
     This test validates checkpoint can be called several times without
@@ -906,8 +908,10 @@ def test_checkpoint_repeated_strategy(tmpdir):
             loss = self.loss(batch, output)
             self.log("val_loss", loss)
 
+        def validation_epoch_end(self, outputs):
+            ...
+
     model = ExtendedBoringModel()
-    model.validation_epoch_end = None
     trainer_kwargs = {
         "max_epochs": 1,
         "limit_train_batches": 2,
@@ -925,9 +929,8 @@ def test_checkpoint_repeated_strategy(tmpdir):
         trainer = pl.Trainer(
             **trainer_kwargs, default_root_dir=tmpdir, resume_from_checkpoint=checkpoint_callback.best_model_path
         )
-        model = LogInTwoMethods.load_from_checkpoint(checkpoint_callback.best_model_path)
         trainer.fit(model)
-        trainer.test(model, verbose=False)
+        trainer.test(ckpt_path=checkpoint_callback.best_model_path, verbose=False)
         assert set(os.listdir(tmpdir)) == {"epoch=00.ckpt", "lightning_logs"}
     assert set(os.listdir(tmpdir / "lightning_logs")) == {f"version_{i}" for i in range(4)}
 

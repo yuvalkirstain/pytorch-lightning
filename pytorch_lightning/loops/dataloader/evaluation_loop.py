@@ -142,8 +142,8 @@ class EvaluationLoop(DataLoaderLoop):
         # hook
         self.on_evaluation_end()
 
-        # save predictions to disk
-        self.epoch_loop.predictions.to_disk()
+        if self.predictions is not None:
+            self.predictions.to_disk()
 
         # enable train mode again
         self.on_evaluation_model_train()

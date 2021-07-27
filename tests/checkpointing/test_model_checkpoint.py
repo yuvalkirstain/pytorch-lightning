@@ -855,7 +855,9 @@ def test_model_checkpoint_save_last_checkpoint_contents(tmpdir):
     ckpt_last_epoch = torch.load(path_last_epoch)
     ckpt_last = torch.load(path_last)
 
-    assert ckpt_last_epoch["epoch"] == ckpt_last["epoch"]
+    # `-1` because this checkpoint is saved `on_train_epoch_end` which is considered part of the epoch so the
+    # `current_epoch` count has not been increased yet
+    assert ckpt_last_epoch["epoch"] == ckpt_last["epoch"] - 1
     assert ckpt_last_epoch["global_step"] == ckpt_last["global_step"]
 
     ch_type = type(model_checkpoint)
@@ -935,6 +937,8 @@ def test_checkpoint_repeated_strategy(tmpdir):
     assert set(os.listdir(tmpdir / "lightning_logs")) == {f"version_{i}" for i in range(4)}
 
 
+# FIXME: only BC with fault tolerance enabled
+@mock.patch.dict(os.environ, {"PL_FAULT_TOLERANT_TRAINING": "1"})
 def test_checkpoint_repeated_strategy_extended(tmpdir):
     """
     This test validates checkpoint can be called several times without
@@ -960,7 +964,9 @@ def test_checkpoint_repeated_strategy_extended(tmpdir):
 
     def assert_checkpoint_content(ckpt_dir):
         chk = pl_load(get_last_checkpoint(ckpt_dir))
-        assert chk["epoch"] == epochs
+        # `-1` because this checkpoint is saved `on_train_epoch_end` which is considered part of the epoch so the
+        # `current_epoch` count has not been increased yet
+        assert chk["epoch"] == epochs - 1
         assert chk["global_step"] == 4
 
     def assert_checkpoint_log_dir(idx):
@@ -987,15 +993,15 @@ def test_checkpoint_repeated_strategy_extended(tmpdir):
     model = ExtendedBoringModel()
     trainer.fit(model)
     assert trainer.global_step == epochs * limit_train_batches
-    assert trainer.current_epoch == epochs - 1
+    assert trainer.current_epoch == epochs
     assert_checkpoint_log_dir(0)
     assert_checkpoint_content(ckpt_dir)
 
     trainer.validate(model)
-    assert trainer.current_epoch == epochs - 1
+    assert trainer.current_epoch == epochs
 
     trainer.test(model)
-    assert trainer.current_epoch == epochs - 1
+    assert trainer.current_epoch == epochs
 
     for idx in range(1, 5):
         chk = get_last_checkpoint(ckpt_dir)

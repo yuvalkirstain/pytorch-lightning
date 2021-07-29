@@ -39,6 +39,7 @@ from pytorch_lightning.utilities.imports import (  # noqa: F401
     _IPU_AVAILABLE,
     _IS_INTERACTIVE,
     _JSONARGPARSE_AVAILABLE,
+    _LIGHTNING_GRID_AVAILABLE,
     _module_available,
     _NATIVE_AMP_AVAILABLE,
     _OMEGACONF_AVAILABLE,

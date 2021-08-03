@@ -576,7 +576,7 @@ class LightningModule(
             when running in distributed mode, calling ``write_prediction`` will create a file for
             each device with respective names: ``filename_rank_0.pt``, ``filename_rank_1.pt``, ...
 
-        .. deprecated::v1.3
+        .. deprecated:: v1.3
             Will be removed in v1.5.0.
         """
         rank_zero_deprecation(
@@ -602,7 +602,7 @@ class LightningModule(
             when running in distributed mode, calling ``write_prediction_dict`` will create a file for
             each device with respective names: ``filename_rank_0.pt``, ``filename_rank_1.pt``, ...
 
-        .. deprecated::v1.3
+        .. deprecated:: v1.3
             Will be removed in v1.5.0.
         """
         rank_zero_deprecation(

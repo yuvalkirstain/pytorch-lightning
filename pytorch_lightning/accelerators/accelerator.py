@@ -453,7 +453,7 @@ class Accelerator:
         Attaches the training type plugin to the accelerator.
         Also transfers ownership of the model to this plugin
 
-        .. deprecated::v1.3
+        .. deprecated:: v1.3
             Will be removed in v1.5.0.
         """
         rank_zero_warn(
@@ -465,7 +465,7 @@ class Accelerator:
     def connect_precision_plugin(self, plugin: PrecisionPlugin) -> None:
         """Attaches the precision plugin to the accelerator
 
-        .. deprecated::v1.3
+        .. deprecated:: v1.3
             Will be removed in v1.5.0.
         """
         rank_zero_warn(

@@ -11,13 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Progress Bars
-=============
 
-Use or override one of the progress bar callbacks.
-
-"""
 import importlib
 import io
 import math
@@ -38,10 +32,12 @@ from pytorch_lightning.callbacks import Callback
 _PAD_SIZE = 5
 
 
-class tqdm(_tqdm):
-    """
-    Custom tqdm progressbar where we append 0 to floating points/strings to prevent the progress bar from flickering
-    """
+class Tqdm(_tqdm):
+    def __init__(self, *args, **kwargs):
+        """Custom tqdm progressbar where we append 0 to floating points/strings to prevent the progress bar from
+        flickering."""
+        # this just to make the make docs happy, otherwise it pulls docs which has some issues...
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def format_num(n) -> str:
@@ -66,26 +62,26 @@ class ProgressBarBase(Callback):
     that keeps track of the batch progress in the :class:`~pytorch_lightning.trainer.trainer.Trainer`.
     You should implement your highly custom progress bars with this as the base class.
 
-    Example::
+    Example:
 
-        class LitProgressBar(ProgressBarBase):
-
-            def __init__(self):
-                super().__init__()  # don't forget this :)
-                self.enable = True
-
-            def disable(self):
-                self.enable = False
-
-            def on_train_batch_end(self, trainer, pl_module, outputs):
-                super().on_train_batch_end(trainer, pl_module, outputs)  # don't forget this :)
-                percent = (self.train_batch_idx / self.total_train_batches) * 100
-                sys.stdout.flush()
-                sys.stdout.write(f'{percent:.01f} percent complete \r')
-
-        bar = LitProgressBar()
-        trainer = Trainer(callbacks=[bar])
-
+        >>> class LitProgressBar(ProgressBarBase):
+        ...
+        ...     def __init__(self):
+        ...         super().__init__()  # don't forget this :)
+        ...         self.enable = True
+        ...
+        ...     def disable(self):
+        ...         self.enable = False
+        ...
+        ...     def on_train_batch_end(self, trainer, pl_module, outputs):
+        ...         super().on_train_batch_end(trainer, pl_module, outputs)  # don't forget this :)
+        ...         percent = (self.train_batch_idx / self.total_train_batches) * 100
+        ...         sys.stdout.flush()
+        ...         sys.stdout.write(f'{percent:.01f} percent complete \r')
+        ...
+        >>> bar = LitProgressBar()
+        >>> from pytorch_lightning import Trainer
+        >>> trainer = Trainer(callbacks=[bar])
     """
 
     def __init__(self):
@@ -134,19 +130,19 @@ class ProgressBarBase(Callback):
 
     @property
     def total_train_batches(self) -> int:
-        """
-        The total number of training batches during training, which may change from epoch to epoch.
-        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the
-        training dataloader is of infinite size.
+        r"""The total number of training batches during training, which may change from epoch to epoch.
+
+        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the training
+        dataloader is of infinite size.
         """
         return self.trainer.num_training_batches
 
     @property
     def total_val_batches(self) -> int:
-        """
-        The total number of validation batches during validation, which may change from epoch to epoch.
-        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the
-        validation dataloader is of infinite size.
+        r"""The total number of validation batches during validation, which may change from epoch to epoch.
+
+        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the validation
+        dataloader is of infinite size.
         """
         total_val_batches = 0
         if self.trainer.enable_validation:
@@ -157,33 +153,33 @@ class ProgressBarBase(Callback):
 
     @property
     def total_test_batches(self) -> int:
-        """
-        The total number of testing batches during testing, which may change from epoch to epoch.
-        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the
-        test dataloader is of infinite size.
+        r"""The total number of testing batches during testing, which may change from epoch to epoch.
+
+        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the test dataloader is
+        of infinite size.
         """
         return sum(self.trainer.num_test_batches)
 
     @property
     def total_predict_batches(self) -> int:
-        """
-        The total number of predicting batches during testing, which may change from epoch to epoch.
-        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the
-        predict dataloader is of infinite size.
+        r"""The total number of predicting batches during testing, which may change from epoch to epoch.
+
+        Use this to set the total number of iterations in the progress bar. Can return ``inf`` if the predict dataloader
+        is of infinite size.
         """
         return sum(self.trainer.num_predict_batches)
 
     def disable(self):
-        """
-        You should provide a way to disable the progress bar.
+        r"""You should provide a way to disable the progress bar.
+
         The :class:`~pytorch_lightning.trainer.trainer.Trainer` will call this to disable the
         output on processes that have a rank different from 0, e.g., in multi-node training.
         """
         raise NotImplementedError
 
     def enable(self):
-        """
-        You should provide a way to enable the progress bar.
+        r"""You should provide a way to enable the progress bar.
+
         The :class:`~pytorch_lightning.trainer.trainer.Trainer` will call this in e.g. pre-training
         routines like the :ref:`learning rate finder <advanced/lr_finder:Learning Rate Finder>`
         to temporarily enable and disable the main progress bar.
@@ -229,49 +225,45 @@ class ProgressBarBase(Callback):
 
 class ProgressBar(ProgressBarBase):
     r"""
-    This is the default progress bar used by Lightning. It prints to `stdout` using the
+    This is the default progress bar used by Lightning. It prints to ``stdout`` using the
     :mod:`tqdm` package and shows up to four different bars:
 
-    - **sanity check progress:** the progress during the sanity check run
-    - **main progress:** shows training + validation progress combined. It also accounts for
-      multiple validation runs during training when
-      :paramref:`~pytorch_lightning.trainer.trainer.Trainer.val_check_interval` is used.
-    - **validation progress:** only visible during validation;
-      shows total progress over all validation datasets.
-    - **test progress:** only active when testing; shows total progress over all test datasets.
+        - **sanity check progress:** the progress during the sanity check run
+        - **main progress:** shows training + validation progress combined. It also accounts for
+          multiple validation runs during training when
+          :paramref:`~pytorch_lightning.trainer.trainer.Trainer.val_check_interval` is used.
+        - **validation progress:** only visible during validation;
+          shows total progress over all validation datasets.
+        - **test progress:** only active when testing; shows total progress over all test datasets.
 
     For infinite datasets, the progress bar never ends.
 
     If you want to customize the default ``tqdm`` progress bars used by Lightning, you can override
     specific methods of the callback class and pass your custom implementation to the
-    :class:`~pytorch_lightning.trainer.trainer.Trainer`:
+    :class:`~pytorch_lightning.trainer.trainer.Trainer`.
 
-    Example::
+    Example:
 
-        class LitProgressBar(ProgressBar):
-
-            def init_validation_tqdm(self):
-                bar = super().init_validation_tqdm()
-                bar.set_description('running validation ...')
-                return bar
-
-        bar = LitProgressBar()
-        trainer = Trainer(callbacks=[bar])
+        >>> class LitProgressBar(ProgressBar):
+        ...     def init_validation_tqdm(self):
+        ...         bar = super().init_validation_tqdm()
+        ...         bar.set_description('running validation ...')
+        ...         return bar
+        ...
+        >>> bar = LitProgressBar()
+        >>> from pytorch_lightning import Trainer
+        >>> trainer = Trainer(callbacks=[bar])
 
     Args:
-        refresh_rate:
-            Determines at which rate (in number of batches) the progress bars get updated.
-            Set it to ``0`` to disable the display. By default, the
-            :class:`~pytorch_lightning.trainer.trainer.Trainer` uses this implementation of the progress
-            bar and sets the refresh rate to the value provided to the
+        refresh_rate: Determines at which rate (in number of batches) the progress bars get updated.
+            Set it to ``0`` to disable the display. By default, the :class:`~pytorch_lightning.trainer.trainer.Trainer`
+            uses this implementation of the progress bar and sets the refresh rate to the value provided to the
             :paramref:`~pytorch_lightning.trainer.trainer.Trainer.progress_bar_refresh_rate` argument in the
             :class:`~pytorch_lightning.trainer.trainer.Trainer`.
-        process_position:
-            Set this to a value greater than ``0`` to offset the progress bars by this many lines.
+        process_position: Set this to a value greater than ``0`` to offset the progress bars by this many lines.
             This is useful when you have progress bars defined elsewhere and want to show all of them
-            together. This corresponds to
-            :paramref:`~pytorch_lightning.trainer.trainer.Trainer.process_position` in the
-            :class:`~pytorch_lightning.trainer.trainer.Trainer`.
+            together. This corresponds to :paramref:`~pytorch_lightning.trainer.trainer.Trainer.process_position`
+            in the :class:`~pytorch_lightning.trainer.trainer.Trainer`.
 
     """
 
@@ -316,9 +308,9 @@ class ProgressBar(ProgressBarBase):
     def enable(self) -> None:
         self._enabled = True
 
-    def init_sanity_tqdm(self) -> tqdm:
+    def init_sanity_tqdm(self) -> Tqdm:
         """Override this to customize the tqdm bar for the validation sanity run."""
-        bar = tqdm(
+        bar = Tqdm(
             desc="Validation sanity check",
             position=(2 * self.process_position),
             disable=self.is_disabled,
@@ -328,9 +320,9 @@ class ProgressBar(ProgressBarBase):
         )
         return bar
 
-    def init_train_tqdm(self) -> tqdm:
+    def init_train_tqdm(self) -> Tqdm:
         """Override this to customize the tqdm bar for training."""
-        bar = tqdm(
+        bar = Tqdm(
             desc="Training",
             initial=self.train_batch_idx,
             position=(2 * self.process_position),
@@ -342,9 +334,9 @@ class ProgressBar(ProgressBarBase):
         )
         return bar
 
-    def init_predict_tqdm(self) -> tqdm:
+    def init_predict_tqdm(self) -> Tqdm:
         """Override this to customize the tqdm bar for predicting."""
-        bar = tqdm(
+        bar = Tqdm(
             desc="Predicting",
             initial=self.train_batch_idx,
             position=(2 * self.process_position),
@@ -356,11 +348,11 @@ class ProgressBar(ProgressBarBase):
         )
         return bar
 
-    def init_validation_tqdm(self) -> tqdm:
+    def init_validation_tqdm(self) -> Tqdm:
         """Override this to customize the tqdm bar for validation."""
         # The main progress bar doesn't exist in `trainer.validate()`
         has_main_bar = self.main_progress_bar is not None
-        bar = tqdm(
+        bar = Tqdm(
             desc="Validating",
             position=(2 * self.process_position + has_main_bar),
             disable=self.is_disabled,
@@ -370,9 +362,9 @@ class ProgressBar(ProgressBarBase):
         )
         return bar
 
-    def init_test_tqdm(self) -> tqdm:
+    def init_test_tqdm(self) -> Tqdm:
         """Override this to customize the tqdm bar for testing."""
-        bar = tqdm(
+        bar = Tqdm(
             desc="Testing",
             position=(2 * self.process_position),
             disable=self.is_disabled,
@@ -385,7 +377,7 @@ class ProgressBar(ProgressBarBase):
     def on_sanity_check_start(self, trainer, pl_module):
         super().on_sanity_check_start(trainer, pl_module)
         self.val_progress_bar = self.init_sanity_tqdm()
-        self.main_progress_bar = tqdm(disable=True)  # dummy progress bar
+        self.main_progress_bar = Tqdm(disable=True)  # dummy progress bar
 
     def on_sanity_check_end(self, trainer, pl_module):
         super().on_sanity_check_end(trainer, pl_module)
@@ -489,7 +481,7 @@ class ProgressBar(ProgressBarBase):
     def _should_update(self, current, total) -> bool:
         return self.is_enabled and (current % self.refresh_rate == 0 or current == total)
 
-    def _update_bar(self, bar: Optional[tqdm]) -> None:
+    def _update_bar(self, bar: Optional[Tqdm]) -> None:
         """Updates the bar by the refresh rate without overshooting."""
         if bar is None:
             return
@@ -509,7 +501,7 @@ def convert_inf(x: Optional[Union[int, float]]) -> Optional[Union[int, float]]:
     return x
 
 
-def reset(bar: tqdm, total: Optional[int] = None) -> None:
+def reset(bar: Tqdm, total: Optional[int] = None) -> None:
     """Resets the tqdm bar to 0 progress with a new total, unless it is disabled."""
     if not bar.disable:
         bar.reset(total=convert_inf(total))

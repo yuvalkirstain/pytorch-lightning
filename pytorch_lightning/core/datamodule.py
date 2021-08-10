@@ -26,9 +26,8 @@ from pytorch_lightning.utilities.argparse import add_argparse_args, from_argpars
 
 
 class LightningDataModule(CheckpointHooks, DataHooks, HyperparametersMixin):
-    """
-    A DataModule standardizes the training, val, test splits, data preparation and transforms.
-    The main advantage is consistent data splits, data preparation and transforms across models.
+    """A DataModule standardizes the training, val, test splits, data preparation and transforms. The main
+    advantage is consistent data splits, data preparation and transforms across models.
 
     Example::
 
@@ -93,9 +92,7 @@ class LightningDataModule(CheckpointHooks, DataHooks, HyperparametersMixin):
 
     @property
     def train_transforms(self):
-        """
-        Optional transforms (or collection of transforms) you can apply to train dataset
-        """
+        """Optional transforms (or collection of transforms) you can apply to train dataset."""
         return self._train_transforms
 
     @train_transforms.setter
@@ -104,9 +101,7 @@ class LightningDataModule(CheckpointHooks, DataHooks, HyperparametersMixin):
 
     @property
     def val_transforms(self):
-        """
-        Optional transforms (or collection of transforms) you can apply to validation dataset
-        """
+        """Optional transforms (or collection of transforms) you can apply to validation dataset."""
         return self._val_transforms
 
     @val_transforms.setter
@@ -115,9 +110,7 @@ class LightningDataModule(CheckpointHooks, DataHooks, HyperparametersMixin):
 
     @property
     def test_transforms(self):
-        """
-        Optional transforms (or collection of transforms) you can apply to test dataset
-        """
+        """Optional transforms (or collection of transforms) you can apply to test dataset."""
         return self._test_transforms
 
     @test_transforms.setter
@@ -126,8 +119,9 @@ class LightningDataModule(CheckpointHooks, DataHooks, HyperparametersMixin):
 
     @property
     def dims(self):
-        """
-        A tuple describing the shape of your data. Extra functionality exposed in ``size``.
+        """A tuple describing the shape of your data.
+
+        Extra functionality exposed in ``size``.
         """
         return self._dims
 
@@ -136,9 +130,9 @@ class LightningDataModule(CheckpointHooks, DataHooks, HyperparametersMixin):
         self._dims = d
 
     def size(self, dim=None) -> Union[Tuple, int]:
-        """
-        Return the dimension of each input either as a tuple or list of tuples. You can index this
-        just as you would with a torch tensor.
+        """Return the dimension of each input either as a tuple or list of tuples.
+
+        You can index this just as you would with a torch tensor.
         """
 
         if dim is not None:

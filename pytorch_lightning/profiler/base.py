@@ -50,9 +50,7 @@ class AbstractProfiler(ABC):
 
 
 class BaseProfiler(AbstractProfiler):
-    """
-    If you wish to write a custom profiler, you should inherit from this class.
-    """
+    """If you wish to write a custom profiler, you should inherit from this class."""
 
     def __init__(
         self,
@@ -79,8 +77,7 @@ class BaseProfiler(AbstractProfiler):
 
     @contextmanager
     def profile(self, action_name: str) -> None:
-        """
-        Yields a context manager to encapsulate the scope of a profiled action.
+        """Yields a context manager to encapsulate the scope of a profiled action.
 
         Example::
 
@@ -173,8 +170,7 @@ class BaseProfiler(AbstractProfiler):
         self.dirpath = self.dirpath or log_dir
 
     def teardown(self, stage: Optional[str] = None) -> None:
-        """
-        Execute arbitrary post-profiling tear-down steps.
+        """Execute arbitrary post-profiling tear-down steps.
 
         Closes the currently open file and stream.
         """
@@ -201,8 +197,8 @@ class BaseProfiler(AbstractProfiler):
 
 
 class PassThroughProfiler(BaseProfiler):
-    """
-    This class should be used when you don't want the (small) overhead of profiling.
+    """This class should be used when you don't want the (small) overhead of profiling.
+
     The Trainer uses this class by default.
     """
 

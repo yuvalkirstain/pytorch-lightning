@@ -29,9 +29,7 @@ from tests.helpers.runif import RunIf
 
 @RunIf(min_gpus=1)
 def test_gpu_stats_monitor(tmpdir):
-    """
-    Test GPU stats are logged using a logger.
-    """
+    """Test GPU stats are logged using a logger."""
     model = BoringModel()
     gpu_stats = GPUStatsMonitor(intra_step_time=True)
     logger = CSVLogger(tmpdir)
@@ -65,18 +63,14 @@ def test_gpu_stats_monitor(tmpdir):
 
 @pytest.mark.skipif(torch.cuda.is_available(), reason="test requires CPU machine")
 def test_gpu_stats_monitor_cpu_machine(tmpdir):
-    """
-    Test GPUStatsMonitor on CPU machine.
-    """
+    """Test GPUStatsMonitor on CPU machine."""
     with pytest.raises(MisconfigurationException, match="NVIDIA driver is not installed"):
         GPUStatsMonitor()
 
 
 @RunIf(min_gpus=1)
 def test_gpu_stats_monitor_no_logger(tmpdir):
-    """
-    Test GPUStatsMonitor with no logger in Trainer.
-    """
+    """Test GPUStatsMonitor with no logger in Trainer."""
     model = BoringModel()
     gpu_stats = GPUStatsMonitor()
 
@@ -88,9 +82,7 @@ def test_gpu_stats_monitor_no_logger(tmpdir):
 
 @RunIf(min_gpus=1)
 def test_gpu_stats_monitor_no_gpu_warning(tmpdir):
-    """
-    Test GPUStatsMonitor raises a warning when not training on GPU device.
-    """
+    """Test GPUStatsMonitor raises a warning when not training on GPU device."""
     model = BoringModel()
     gpu_stats = GPUStatsMonitor()
 

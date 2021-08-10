@@ -102,9 +102,7 @@ def test_amp_gradient_unscale(tmpdir, accum: int):
 
 @RunIf(min_gpus=1, amp_native=True)
 def test_amp_skip_optimizer(tmpdir):
-    """
-    Test that optimizers can be skipped when using amp
-    """
+    """Test that optimizers can be skipped when using amp."""
 
     class CustomBoringModel(BoringModel):
         def __init__(self):

@@ -53,8 +53,7 @@ else:
 
 
 class MLFlowLogger(LightningLoggerBase):
-    """
-    Log using `MLflow <https://mlflow.org>`_.
+    """Log using `MLflow <https://mlflow.org>`_.
 
     Install it with pip:
 
@@ -228,8 +227,7 @@ class MLFlowLogger(LightningLoggerBase):
 
     @property
     def save_dir(self) -> Optional[str]:
-        """
-        The root file directory in which MLflow experiments are saved.
+        """The root file directory in which MLflow experiments are saved.
 
         Return:
             Local path to the root experiment directory if the tracking uri is local.

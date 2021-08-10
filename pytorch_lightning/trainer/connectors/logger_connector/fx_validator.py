@@ -87,7 +87,7 @@ class FxValidator:
 
     @classmethod
     def check_logging(cls, fx_name: str, on_step: bool, on_epoch: bool) -> None:
-        """Check if the given function name is allowed to log"""
+        """Check if the given function name is allowed to log."""
         if fx_name not in cls.functions:
             raise RuntimeError(
                 f"You are trying to `self.log()` inside `{fx_name}` but it is not implemented."

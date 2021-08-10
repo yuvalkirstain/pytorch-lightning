@@ -41,7 +41,7 @@ class Tqdm(_tqdm):
 
     @staticmethod
     def format_num(n) -> str:
-        """Add additional padding to the formatted numbers"""
+        """Add additional padding to the formatted numbers."""
         should_be_padded = isinstance(n, (float, str))
         if not isinstance(n, str):
             n = _tqdm.format_num(n)
@@ -98,32 +98,32 @@ class ProgressBarBase(Callback):
 
     @property
     def train_batch_idx(self) -> int:
-        """
-        The current batch index being processed during training.
+        """The current batch index being processed during training.
+
         Use this to update your progress bar.
         """
         return self._train_batch_idx
 
     @property
     def val_batch_idx(self) -> int:
-        """
-        The current batch index being processed during validation.
+        """The current batch index being processed during validation.
+
         Use this to update your progress bar.
         """
         return self._val_batch_idx
 
     @property
     def test_batch_idx(self) -> int:
-        """
-        The current batch index being processed during testing.
+        """The current batch index being processed during testing.
+
         Use this to update your progress bar.
         """
         return self._test_batch_idx
 
     @property
     def predict_batch_idx(self) -> int:
-        """
-        The current batch index being processed during predicting.
+        """The current batch index being processed during predicting.
+
         Use this to update your progress bar.
         """
         return self._predict_batch_idx
@@ -187,9 +187,7 @@ class ProgressBarBase(Callback):
         raise NotImplementedError
 
     def print(self, *args, **kwargs):
-        """
-        You should provide a way to print without breaking the progress bar.
-        """
+        """You should provide a way to print without breaking the progress bar."""
         print(*args, **kwargs)
 
     def on_init_end(self, trainer):
@@ -495,7 +493,10 @@ class ProgressBar(ProgressBarBase):
 
 
 def convert_inf(x: Optional[Union[int, float]]) -> Optional[Union[int, float]]:
-    """The tqdm doesn't support inf/nan values. We have to convert it to None."""
+    """The tqdm doesn't support inf/nan values.
+
+    We have to convert it to None.
+    """
     if x is None or math.isinf(x) or math.isnan(x):
         return None
     return x

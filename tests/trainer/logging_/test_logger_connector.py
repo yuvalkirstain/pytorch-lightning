@@ -206,7 +206,10 @@ def test_epoch_results_cache_dp(tmpdir):
 
 
 def test_can_return_tensor_with_more_than_one_element(tmpdir):
-    """Ensure {validation,test}_step return values are not included as callback metrics. #6623"""
+    """Ensure {validation,test}_step return values are not included as callback metrics.
+
+    #6623
+    """
 
     class TestModel(BoringModel):
         def validation_step(self, batch, *args, **kwargs):
@@ -250,7 +253,7 @@ def test_logging_to_progress_bar_with_reserved_key(tmpdir):
 
 @pytest.mark.parametrize("add_dataloader_idx", [False, True])
 def test_auto_add_dataloader_idx(tmpdir, add_dataloader_idx):
-    """test that auto_add_dataloader_idx argument works"""
+    """test that auto_add_dataloader_idx argument works."""
 
     class TestModel(BoringModel):
         def val_dataloader(self):

@@ -60,12 +60,12 @@ class TrainingBatchLoop(Loop):
 
     @property
     def done(self) -> bool:
-        """Returns if all batch splits have been processed already"""
+        """Returns if all batch splits have been processed already."""
         return len(self._remaining_splits) == 0
 
     @property
     def optimizer_freq_cumsum(self) -> int:
-        """Returns the cumulated sum of optimizer frequencies"""
+        """Returns the cumulated sum of optimizer frequencies."""
         if self._optimizer_freq_cumsum is None:
             self._optimizer_freq_cumsum = np.cumsum(self.trainer.optimizer_frequencies)
         return self._optimizer_freq_cumsum
@@ -74,7 +74,7 @@ class TrainingBatchLoop(Loop):
         raise NotImplementedError(f"{self.__class__.__name__} does not connect any child loops.")
 
     def run(self, batch: Any, batch_idx: int, dataloader_idx: int) -> AttributeDict:
-        """Runs all the data splits and the ``on_batch_start`` and ``on_train_batch_start`` hooks
+        """Runs all the data splits and the ``on_batch_start`` and ``on_train_batch_start`` hooks.
 
         Args:
             batch: the current batch to run the train step on
@@ -104,12 +104,12 @@ class TrainingBatchLoop(Loop):
         return output
 
     def reset(self) -> None:
-        """Resets the loop state"""
+        """Resets the loop state."""
         self._hiddens = None
         self.batch_outputs = [[] for _ in range(len(self.trainer.optimizers))]
 
     def on_run_start(self, batch: Any, batch_idx: int, dataloader_idx: int):
-        """Splits the data into tbptt splits
+        """Splits the data into tbptt splits.
 
         Args:
             batch: the current batch to run the trainstep on
@@ -120,7 +120,7 @@ class TrainingBatchLoop(Loop):
         self._remaining_splits = list(enumerate(self._tbptt_split_batch(batch)))
 
     def advance(self, batch, batch_idx, dataloader_idx):
-        """Runs the train step together with optimization (if necessary) on the current batch split
+        """Runs the train step together with optimization (if necessary) on the current batch split.
 
         Args:
             batch: the current batch to run the training on (this is not the split!)
@@ -157,7 +157,7 @@ class TrainingBatchLoop(Loop):
         self._remaining_splits = None
 
     def num_active_optimizers(self, batch_idx: Optional[int] = None) -> int:
-        """Gets the number of active optimizers based on their frequency"""
+        """Gets the number of active optimizers based on their frequency."""
         return len(self.get_active_optimizers(batch_idx))
 
     def _run_optimization(
@@ -221,7 +221,7 @@ class TrainingBatchLoop(Loop):
         hiddens: Tensor,
         return_result: AttributeDict,
     ) -> Optional[Tensor]:
-        """Closure for training step and backward
+        """Closure for training step and backward.
 
         Args:
             split_batch: the current tbptt split of the batch
@@ -243,7 +243,7 @@ class TrainingBatchLoop(Loop):
         return update_wrapper(partial_func, self._training_step_and_backward_closure)
 
     def _process_closure_result(self, opt_closure_result: Optional[AttributeDict]) -> None:
-        """Checks if the closure results is finite and optionally breaks if it is not
+        """Checks if the closure results is finite and optionally breaks if it is not.
 
         Args:
             opt_closure_result: the result of the train step wrapped in an attribute dict
@@ -261,7 +261,6 @@ class TrainingBatchLoop(Loop):
 
         Args:
             training_step_output: the output of the training step (before wrapping in an AttributeDict)
-
         """
         if isinstance(training_step_output, Tensor) and not self.trainer.lightning_module.automatic_optimization:
             if training_step_output.grad_fn is None:
@@ -324,7 +323,7 @@ class TrainingBatchLoop(Loop):
         return AttributeDict(closure_loss=closure_loss, loss=loss, training_step_output=training_step_output)
 
     def _process_training_step_output(self, training_step_output: STEP_OUTPUT) -> Optional[ResultCollection]:
-        """Adds the :param:`training_step_output` to the trainer's results
+        """Adds the :param:`training_step_output` to the trainer's results.
 
         Args:
             training_step_output: the output of the training step (before wrapping into an AttributeDict)
@@ -466,7 +465,6 @@ class TrainingBatchLoop(Loop):
         Args:
             opt_idx: the index of the optimizer to use
             optimizer: the optimizer to use
-
         """
         # make sure only the gradients of the current optimizer's parameters are calculated
         # in the training step to prevent dangling gradients in multiple-optimizer setup.
@@ -509,7 +507,7 @@ class TrainingBatchLoop(Loop):
         optimizer: torch.optim.Optimizer,
         hiddens: Optional[Tensor],
     ) -> STEP_OUTPUT:
-        """Wrap forward, zero_grad and backward in a closure so second order methods work"""
+        """Wrap forward, zero_grad and backward in a closure so second order methods work."""
         with self.trainer.profiler.profile("training_step_and_backward"):
             # lightning module hook
             result = self._training_step(split_batch, batch_idx, opt_idx, hiddens)
@@ -575,7 +573,7 @@ class TrainingBatchLoop(Loop):
                 self.trainer.lightning_module.log_grad_norm(grad_norm_dict)
 
     def _update_running_loss(self, current_loss: Tensor) -> None:
-        """Updates the running loss value with the current value"""
+        """Updates the running loss value with the current value."""
         if self.trainer.lightning_module.automatic_optimization:
             # track total loss for logging (avoid mem leaks)
             self.accumulated_loss.append(current_loss)
@@ -590,8 +588,7 @@ class TrainingBatchLoop(Loop):
         self.accumulated_loss.reset()
 
     def get_active_optimizers(self, batch_idx: Optional[int] = None) -> List[Tuple[int, Optimizer]]:
-        """
-        Returns the currently active optimizers. When multiple optimizers are used with different frequencies,
+        """Returns the currently active optimizers. When multiple optimizers are used with different frequencies,
         only one of the optimizers is active at a time.
 
         Returns:
@@ -609,7 +606,7 @@ class TrainingBatchLoop(Loop):
         return [(opt_idx, self.trainer.optimizers[opt_idx])]
 
     def _build_kwargs(self, batch: Any, batch_idx: int, opt_idx: int, hiddens: Optional[Tensor]) -> Dict[str, Any]:
-        """Builds the keyword arguments for training_step
+        """Builds the keyword arguments for training_step.
 
         Args:
             batch: the batch to train on
@@ -653,7 +650,7 @@ class TrainingBatchLoop(Loop):
         return self._truncated_bptt_steps() > 0
 
     def _truncated_bptt_steps(self) -> int:
-        """Returns the number of tbptt steps"""
+        """Returns the number of tbptt steps."""
         lightning_module = self.trainer.lightning_module
         # Give precedence to the LightningModule as the Trainer flag will be removed in v1.5
         if lightning_module.truncated_bptt_steps > 0:

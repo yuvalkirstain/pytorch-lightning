@@ -44,7 +44,7 @@ if _TORCHVISION_AVAILABLE:
 
 @mock.patch("argparse.ArgumentParser.parse_args")
 def test_default_args(mock_argparse, tmpdir):
-    """Tests default argument parser for Trainer"""
+    """Tests default argument parser for Trainer."""
     mock_argparse.return_value = Namespace(**Trainer.default_attributes())
 
     parser = LightningArgumentParser(add_help=False, parse_as_dict=False)
@@ -59,9 +59,7 @@ def test_default_args(mock_argparse, tmpdir):
 
 @pytest.mark.parametrize("cli_args", [["--accumulate_grad_batches=22"], ["--weights_save_path=./"], []])
 def test_add_argparse_args_redefined(cli_args):
-    """Redefines some default Trainer arguments via the cli and
-    tests the Trainer initialization correctness.
-    """
+    """Redefines some default Trainer arguments via the cli and tests the Trainer initialization correctness."""
     parser = LightningArgumentParser(add_help=False, parse_as_dict=False)
     parser.add_lightning_class_args(Trainer, None)
 

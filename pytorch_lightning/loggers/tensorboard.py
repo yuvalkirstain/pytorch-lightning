@@ -106,10 +106,10 @@ class TensorBoardLogger(LightningLoggerBase):
 
     @property
     def root_dir(self) -> str:
-        """
-        Parent directory for all tensorboard checkpoint subdirectories.
-        If the experiment name parameter is ``None`` or the empty string, no experiment subdirectory is used
-        and the checkpoint will be saved in "save_dir/version_dir"
+        """Parent directory for all tensorboard checkpoint subdirectories.
+
+        If the experiment name parameter is ``None`` or the empty string, no experiment subdirectory is used and the
+        checkpoint will be saved in "save_dir/version_dir"
         """
         if self.name is None or len(self.name) == 0:
             return self.save_dir
@@ -117,10 +117,10 @@ class TensorBoardLogger(LightningLoggerBase):
 
     @property
     def log_dir(self) -> str:
-        """
-        The directory for this run's tensorboard checkpoint. By default, it is named
-        ``'version_${self.version}'`` but it can be overridden by passing a string value
-        for the constructor's version parameter instead of ``None`` or an int.
+        """The directory for this run's tensorboard checkpoint.
+
+        By default, it is named ``'version_${self.version}'`` but it can be overridden by passing a string value for the
+        constructor's version parameter instead of ``None`` or an int.
         """
         # create a pseudo standard path ala test-tube
         version = self.version if isinstance(self.version, str) else f"version_{self.version}"
@@ -164,10 +164,9 @@ class TensorBoardLogger(LightningLoggerBase):
     def log_hyperparams(
         self, params: Union[Dict[str, Any], Namespace], metrics: Optional[Dict[str, Any]] = None
     ) -> None:
-        """
-        Record hyperparameters. TensorBoard logs with and without saved hyperparameters
-        are incompatible, the hyperparameters are then not displayed in the TensorBoard.
-        Please delete or move the previously saved logs to display the new ones with hyperparameters.
+        """Record hyperparameters. TensorBoard logs with and without saved hyperparameters are incompatible, the
+        hyperparameters are then not displayed in the TensorBoard. Please delete or move the previously saved logs
+        to display the new ones with hyperparameters.
 
         Args:
             params: a dictionary-like container with the hyperparameters

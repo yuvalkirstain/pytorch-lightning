@@ -36,8 +36,7 @@ from pytorch_lightning.utilities.imports import _fault_tolerant_enabled
 
 
 class TensorRunningAccum:
-    """Tracks a running accumulation values (min, max, mean) without graph
-    references.
+    """Tracks a running accumulation values (min, max, mean) without graph references.
 
     Examples:
         >>> accum = TensorRunningAccum(5)
@@ -171,9 +170,7 @@ class PredictionCollection:
 
 
 class CycleIterator:
-    """
-    Iterator for restarting a dataloader if it runs out of samples
-    """
+    """Iterator for restarting a dataloader if it runs out of samples."""
 
     def __init__(self, loader: Any, length: Optional[int] = None):
         """
@@ -191,8 +188,7 @@ class CycleIterator:
         self.counter = 0
 
     def __iter__(self) -> Any:
-        """
-        Creates the internal iterator and returns self
+        """Creates the internal iterator and returns self.
 
         Returns:
             CycleIterator: self
@@ -202,9 +198,7 @@ class CycleIterator:
         return self
 
     def __next__(self) -> Any:
-        """
-        Fetches the next batch from internal dataloader and restarts
-        it if necessary
+        """Fetches the next batch from internal dataloader and restarts it if necessary.
 
         Returns:
             Any: the resulting batch
@@ -231,9 +225,7 @@ class CycleIterator:
 
 
 class CombinedDataset:
-    """
-    Combine multiple datasets and compute their statistics
-    """
+    """Combine multiple datasets and compute their statistics."""
 
     COMPUTE_FUNCS = {"min_size": min, "max_size_cycle": max}
 
@@ -262,8 +254,7 @@ class CombinedDataset:
         return self._calc_num_data(self.datasets, "min_size")
 
     def _calc_num_data(self, datasets: Union[Sequence, Mapping], mode: str) -> Union[int, float]:
-        """
-        Compute the length of `CombinedDataset` according to the `mode`.
+        """Compute the length of `CombinedDataset` according to the `mode`.
 
         Args:
             datasets: a sequence/mapping datasets. Can be a collections of torch.utils.data.Dataset,
@@ -324,12 +315,10 @@ class DataLoaderDict(Dict):
 
 
 class CombinedLoader:
-    """
-    Combines different dataloaders and allows sampling in parallel.
-    Supported modes are 'min_size', which raises StopIteration after the shortest loader
-    (the one with the lowest number of batches) is done, and 'max_size_cycle` which raises
-    StopIteration after the longest loader (the one with most batches) is done, while cycling
-    through the shorter loaders.
+    """Combines different dataloaders and allows sampling in parallel. Supported modes are 'min_size', which raises
+    StopIteration after the shortest loader (the one with the lowest number of batches) is done, and
+    'max_size_cycle` which raises StopIteration after the longest loader (the one with most batches) is done, while
+    cycling through the shorter loaders.
 
     Examples:
         >>> loaders = {'a': torch.utils.data.DataLoader(range(6), batch_size=4),
@@ -389,8 +378,7 @@ class CombinedLoader:
         return DataLoaderDict(state)
 
     def state_dict(self, num_batches_processed: int) -> Dict:
-        """
-        The state dict includes all states from wrapped dataloaders and their samplers through the
+        """The state dict includes all states from wrapped dataloaders and their samplers through the
         ``CaptureIterableDataset`` and fast-forward samplers.
 
         Args:
@@ -456,8 +444,7 @@ class CombinedLoader:
         return apply_to_collection(self.loaders, (DataLoader, IterableDataset), getattr, "sampler", None)
 
     def _wrap_loaders_max_size_cycle(self) -> Any:
-        """
-        Wraps all loaders to make sure they are cycled until the longest loader is exhausted
+        """Wraps all loaders to make sure they are cycled until the longest loader is exhausted.
 
         Returns:
             the wrapped loaders
@@ -473,9 +460,7 @@ class CombinedLoader:
             )
 
     def __iter__(self) -> Any:
-        """
-        Create and return an iterator, `CombinedLoaderIterator`, for the combined loader.
-        """
+        """Create and return an iterator, `CombinedLoaderIterator`, for the combined loader."""
 
         # prevent `NotImplementedError` from PyTorch:
         # https://github.com/pytorch/pytorch/blob/v1.9.0/torch/utils/data/dataloader.py#L541
@@ -491,8 +476,7 @@ class CombinedLoader:
 
     @staticmethod
     def _calc_num_batches(loaders: Any) -> Union[int, float]:
-        """
-        Compute the length (aka the number of batches) of `CombinedLoader`.
+        """Compute the length (aka the number of batches) of `CombinedLoader`.
 
         Args:
             loaders: a collections of loaders.
@@ -511,9 +495,7 @@ class CombinedLoader:
 
 
 class CombinedLoaderIterator:
-    """
-    Custom Iterator returning data from multple loaders, and allows sampling in parallel
-    """
+    """Custom Iterator returning data from multple loaders, and allows sampling in parallel."""
 
     def __init__(self, loaders: Any):
         """
@@ -525,9 +507,7 @@ class CombinedLoaderIterator:
 
     @property
     def loader_iters(self) -> Any:
-        """
-        Get the `_loader_iters` and create one if it is None.
-        """
+        """Get the `_loader_iters` and create one if it is None."""
         if self._loader_iters is None:
             self._loader_iters = self.create_loader_iters(self.loaders)
 
@@ -537,8 +517,7 @@ class CombinedLoaderIterator:
         return self
 
     def __next__(self) -> Any:
-        """
-        Fetches the next batch from multiple data loaders
+        """Fetches the next batch from multiple data loaders.
 
         Returns:
             a collections of batch data
@@ -547,8 +526,7 @@ class CombinedLoaderIterator:
 
     @staticmethod
     def request_next_batch(loader_iters: Union[Iterator, Sequence, Mapping]) -> Any:
-        """
-        Return the batch of data from multiple iterators.
+        """Return the batch of data from multiple iterators.
 
         Args:
             loader_iters: a collections of iterators
@@ -577,8 +555,7 @@ class CombinedLoaderIterator:
     def create_loader_iters(
         loaders: Union[Any, Iterator, Sequence, Mapping]
     ) -> Union[Any, Iterator, Sequence, Mapping]:
-        """
-        Create and return a collection of iterators from loaders.
+        """Create and return a collection of iterators from loaders.
 
         Args:
             loaders: a collections of loaders
@@ -613,10 +590,10 @@ def _nested_calc_num_data(data: Union[Mapping, Sequence], compute_func: Callable
 
 
 def prefetch_iterator(iterable: Iterable) -> Generator[Tuple[Any, bool], None, None]:
-    """
-    Returns an iterator that pre-fetches and caches the next item.
-    The values are passed through from the given iterable with an added boolean indicating if this is the last item.
-    See `https://stackoverflow.com/a/1630350 <https://stackoverflow.com/a/1630350>`_
+    """Returns an iterator that pre-fetches and caches the next item.
+
+    The values are passed through from the given iterable with an added boolean indicating if this is the last item. See
+    `https://stackoverflow.com/a/1630350 <https://stackoverflow.com/a/1630350>`_
     """
     it = iter(iterable)
 

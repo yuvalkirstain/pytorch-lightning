@@ -11,9 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Tests the evaluation loop
-"""
+"""Tests the evaluation loop."""
 
 import torch
 
@@ -24,9 +22,7 @@ from tests.helpers.deterministic_model import DeterministicModel
 
 
 def test__eval_step__flow(tmpdir):
-    """
-    Tests that only training_step can be used
-    """
+    """Tests that only training_step can be used."""
 
     class TestModel(DeterministicModel):
         def training_step(self, batch, batch_idx):
@@ -85,9 +81,7 @@ def test__eval_step__flow(tmpdir):
 
 
 def test__eval_step__eval_step_end__flow(tmpdir):
-    """
-    Tests that only training_step can be used
-    """
+    """Tests that only training_step can be used."""
 
     class TestModel(DeterministicModel):
         def training_step(self, batch, batch_idx):
@@ -151,9 +145,7 @@ def test__eval_step__eval_step_end__flow(tmpdir):
 
 
 def test__eval_step__epoch_end__flow(tmpdir):
-    """
-    Tests that only training_step can be used
-    """
+    """Tests that only training_step can be used."""
 
     class TestModel(DeterministicModel):
         def training_step(self, batch, batch_idx):
@@ -206,9 +198,7 @@ def test__eval_step__epoch_end__flow(tmpdir):
 
 
 def test__validation_step__step_end__epoch_end__flow(tmpdir):
-    """
-    Tests that only training_step can be used
-    """
+    """Tests that only training_step can be used."""
 
     class TestModel(DeterministicModel):
         def training_step(self, batch, batch_idx):

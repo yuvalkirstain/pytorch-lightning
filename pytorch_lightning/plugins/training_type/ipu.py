@@ -56,9 +56,7 @@ class LightningIPUModule(_LightningModuleWrapperBase):
 
 
 class IPUPlugin(ParallelPlugin):
-    """
-    Plugin for training on IPU devices.
-    """
+    """Plugin for training on IPU devices."""
 
     def __init__(
         self,
@@ -220,8 +218,8 @@ class IPUPlugin(ParallelPlugin):
 
     @property
     def accumulate_grad_batches(self) -> int:
-        """
-        Tracks lazily the set accumulate_grad_batches in the trainer.
+        """Tracks lazily the set accumulate_grad_batches in the trainer.
+
         The IPUPlugin replaces the original accumulate_grad_batches.
         """
         if self._original_accumulate_grad_batches is None:
@@ -234,9 +232,8 @@ class IPUPlugin(ParallelPlugin):
         return self._original_accumulate_grad_batches
 
     def _handle_gradient_accumulation_steps(self):
-        """
-        This functions overrides the trainer.accumulation_scheduler to generate
-        ``accumulate_grad_batches=1``.
+        """This functions overrides the trainer.accumulation_scheduler to generate ``accumulate_grad_batches=1``.
+
         Therefore, ``optimizer_step`` will be called on every batch, and the IPU will handle grad accumulation.
         """
         if self.accumulate_grad_batches > 1:
@@ -293,16 +290,14 @@ class IPUPlugin(ParallelPlugin):
         return model._executable is not None
 
     def _detach_models(self):
-        """
-        Detaches all stage specific models from IPU devices.
-        """
+        """Detaches all stage specific models from IPU devices."""
         for k, model in self.poptorch_models.items():
             if self._compiled(model) and model.isAttachedToDevice():
                 model.detachFromDevice()
 
     def _load_model(self, stage: str):
-        """
-        Loads the stage specific accelerator model onto device if compiled and not attached to IPU devices.
+        """Loads the stage specific accelerator model onto device if compiled and not attached to IPU devices.
+
         Args:
             stage: The stage to load
         """

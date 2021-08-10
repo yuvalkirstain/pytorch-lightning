@@ -47,7 +47,7 @@ def test_torchscript_input_output(modelclass):
 
 @pytest.mark.parametrize("modelclass", [BoringModel, ParityModuleRNN, BasicGAN])
 def test_torchscript_example_input_output_trace(modelclass):
-    """Test that traced LightningModule forward works with example_input_array"""
+    """Test that traced LightningModule forward works with example_input_array."""
     model = modelclass()
 
     if isinstance(model, BoringModel):
@@ -65,7 +65,7 @@ def test_torchscript_example_input_output_trace(modelclass):
 
 
 def test_torchscript_input_output_trace():
-    """Test that traced LightningModule forward works with example_inputs"""
+    """Test that traced LightningModule forward works with example_inputs."""
     model = BoringModel()
     example_inputs = torch.randn(1, 32)
     script = model.to_torchscript(example_inputs=example_inputs, method="trace")
@@ -151,7 +151,7 @@ def test_torchscript_save_load_custom_filesystem(tmpdir, modelclass):
 
 
 def test_torchcript_invalid_method(tmpdir):
-    """Test that an error is thrown with invalid torchscript method"""
+    """Test that an error is thrown with invalid torchscript method."""
     model = BoringModel()
     model.train(True)
 
@@ -160,7 +160,7 @@ def test_torchcript_invalid_method(tmpdir):
 
 
 def test_torchscript_with_no_input(tmpdir):
-    """Test that an error is thrown when there is no input tensor"""
+    """Test that an error is thrown when there is no input tensor."""
     model = BoringModel()
     model.example_input_array = None
 

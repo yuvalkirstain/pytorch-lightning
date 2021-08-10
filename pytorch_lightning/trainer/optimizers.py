@@ -115,7 +115,7 @@ class TrainerOptimizersMixin(ABC):
     def configure_schedulers(
         self, schedulers: list, monitor: Optional[str], is_manual_optimization: bool
     ) -> List[Dict[str, Any]]:
-        """Convert each scheduler into dict structure with relevant information"""
+        """Convert each scheduler into dict structure with relevant information."""
         lr_schedulers = []
         default_config = _get_default_scheduler_config()
         for scheduler in schedulers:
@@ -178,9 +178,8 @@ class TrainerOptimizersMixin(ABC):
 
 
 class _MockOptimizer(Optimizer):
-    """The `_MockOptimizer` will be used inplace of an optimizer in the event that `None`
-    is returned from `configure_optimizers`.
-    """
+    """The `_MockOptimizer` will be used inplace of an optimizer in the event that `None` is returned from
+    `configure_optimizers`."""
 
     def __init__(self):
         super().__init__([torch.zeros(1)], {})

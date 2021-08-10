@@ -75,8 +75,7 @@ def apply_to_collection(
     include_none: bool = True,
     **kwargs
 ) -> Any:
-    """
-    Recursively applies a function to all elements of a certain dtype.
+    """Recursively applies a function to all elements of a certain dtype.
 
     Args:
         data: the collection to apply the function to
@@ -149,8 +148,7 @@ def apply_to_collections(
     wrong_dtype: Optional[Union[type, tuple]] = None,
     **kwargs
 ) -> Any:
-    """
-    Zips two collections and applies a function to their items of a certain dtype.
+    """Zips two collections and applies a function to their items of a certain dtype.
 
     Args:
         data1: The first collection
@@ -228,9 +226,8 @@ class TransferableDataType(ABC):
 
 
 def move_data_to_device(batch: Any, device: torch.device):
-    """
-    Transfers a collection of data to the given device. Any object that defines a method
-    ``to(device)`` will be moved and all other objects in the collection will be left untouched.
+    """Transfers a collection of data to the given device. Any object that defines a method ``to(device)`` will be
+    moved and all other objects in the collection will be left untouched.
 
     Args:
         batch: A tensor or collection of tensors or anything that has a method `.to(...)`.

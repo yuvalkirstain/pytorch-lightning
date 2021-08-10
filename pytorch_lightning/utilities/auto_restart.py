@@ -25,9 +25,10 @@ from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
 
 class FastForwardSampler(Sampler):
-    """
-    This FastForwardSampler wraps a :class:`torch.utils.data.Sampler` and records the number of iterations
-    performed during an epoch. It maintains a state, saved with :meth:`state_dict`, that can be reloaded with
+    """This FastForwardSampler wraps a :class:`torch.utils.data.Sampler` and records the number of iterations
+    performed during an epoch.
+
+    It maintains a state, saved with :meth:`state_dict`, that can be reloaded with
     :meth:`load_state_dict`. If the sampler is used in a multiprocessing context, the ``FastForwardSampler`` will record
     the state of the current worker.
     When reloading, the ``FastForwardSampler`` will "fast-forward" the wrapped sampler by iterating through all the
@@ -49,8 +50,8 @@ class FastForwardSampler(Sampler):
         return getattr(self._sampler, key, None)
 
     def setup(self, dataloader_batch_size: Optional[int] = None) -> None:
-        """
-        Setup the ``FastForwardSampler``.
+        """Setup the ``FastForwardSampler``.
+
         This is required only when the provided dataset subclassed :class:`torch.utils.data.Dataset`.
         """
         self._dataloader_batch_size = dataloader_batch_size
@@ -86,14 +87,17 @@ class FastForwardSampler(Sampler):
         return len(self._sampler)
 
     def state_dict(self, num_batches_processed: Optional[int] = None) -> Dict[int, Dict[str, int]]:
-        """Returns the state of the sampler in the current worker. The worker id indexes the state dict."""
+        """Returns the state of the sampler in the current worker.
+
+        The worker id indexes the state dict.
+        """
         return {self.worker_id: {"current_iteration": self._compute_current_iteration(num_batches_processed)}}
 
     def load_state_dict(self, state_dict: Dict[int, Any]) -> None:
-        """
-        Loads the saved state for the wrapped sampler.
-        If the ``state_dict`` contains multiple states, it means there were multiple workers.
-        The state will be cached and fully reloaded (fast-forward) the first time :meth:`__iter__` is called.
+        """Loads the saved state for the wrapped sampler.
+
+        If the ``state_dict`` contains multiple states, it means there were multiple workers. The state will be cached
+        and fully reloaded (fast-forward) the first time :meth:`__iter__` is called.
         """
         # as workers aren't available, the ``state_dict``` is cached until workers are made available.
         state_dict = deepcopy(state_dict)
@@ -101,10 +105,10 @@ class FastForwardSampler(Sampler):
         self.restarting = True
 
     def _compute_current_iteration(self, num_batches_processed: Optional[int] = None) -> int:
-        """
-        This function is used to compute the effective iteration.
-        As DataLoader can perform ``prefecthing`` or training can fail while processing a batch,
-        the current iteration needs to be computed using the ``num_batches_processed`` processed information.
+        """This function is used to compute the effective iteration.
+
+        As DataLoader can perform ``prefecthing`` or training can fail while processing a batch, the current iteration
+        needs to be computed using the ``num_batches_processed`` processed information.
         """
         if num_batches_processed is not None:
             current_iteration = num_batches_processed
@@ -125,12 +129,11 @@ class FastForwardSampler(Sampler):
 
 
 class CaptureIterableDataset(IterableDataset):
-    """
-    The ``CaptureIterableDataset`` is used to wrap an :class:`torch.utils.data.IterableDataset`.
-    On ``__iter__`` function call,   the ``CaptureIterableDataset`` will wrap the wrapped dataset
-        generators into ``FastForwardSampler`` to keep track of progress.
-    On ``__next__`` function call, the ``CaptureIterableDataset`` will return a dictionary containing
-        user data and metadata containing the ``FastForwardSampler`` samplers state_dict.
+    """The ``CaptureIterableDataset`` is used to wrap an :class:`torch.utils.data.IterableDataset`.
+
+    On ``__iter__`` function call,   the ``CaptureIterableDataset`` will wrap the wrapped dataset     generators into
+    ``FastForwardSampler`` to keep track of progress. On ``__next__`` function call, the ``CaptureIterableDataset`` will
+    return a dictionary containing     user data and metadata containing the ``FastForwardSampler`` samplers state_dict.
     """
 
     def __init__(self, dataset: IterableDataset) -> None:
@@ -212,11 +215,10 @@ class CaptureIterableDataset(IterableDataset):
 
     @staticmethod
     def store_samplers_state_dict(iterator: Iterator, sampler_state_dict: List) -> None:
-        """
-        This function is used to store and update sampler state dict on its associated iterator.
+        """This function is used to store and update sampler state dict on its associated iterator.
 
-        In Lightning, as the iterator is wrapped into a prefetching function,
-        we needed to introduce a cache to delay updating the ``sampler_state_dict``.
+        In Lightning, as the iterator is wrapped into a prefetching function, we needed to introduce a cache to delay
+        updating the ``sampler_state_dict``.
         """
         iterator_state_dict = getattr(iterator, "_sampler_state_dict", None)
         iterator_state_dict_cache = getattr(iterator, "_sampler_state_dict_cache", None)
@@ -233,9 +235,8 @@ class CaptureIterableDataset(IterableDataset):
 
     @staticmethod
     def _sanitize_batch_from_sampler_state(data: Any, state_dicts: List):
-        """
-        This function is used to remove the sampler state dict from provided data batch.
-        The custom data has this format:
+        """This function is used to remove the sampler state dict from provided data batch. The custom data has
+        this format:
 
         .. code-block:: python
 
@@ -268,9 +269,7 @@ class CaptureIterableDataset(IterableDataset):
 
     @staticmethod
     def extract_samplers_state_dict_from_batch(batch) -> List[Dict[int, Any]]:
-        """
-        This function is used to convert a batch into a state_dict
-        """
+        """This function is used to convert a batch into a state_dict."""
         samplers_state_dict = []
 
         batch = CaptureIterableDataset._sanitize_batch_from_sampler_state(batch, samplers_state_dict)
@@ -279,9 +278,7 @@ class CaptureIterableDataset(IterableDataset):
 
 
 def _find_fast_forward_samplers(dataloader: DataLoader) -> Optional[FastForwardSampler]:
-    """
-    If the ``DataLoader`` is wrapping a mapping based Dataset, return the ``FastForwardSampler``.
-    """
+    """If the ``DataLoader`` is wrapping a mapping based Dataset, return the ``FastForwardSampler``."""
     if isinstance(dataloader.sampler, FastForwardSampler):
         return dataloader.sampler
 
@@ -290,9 +287,8 @@ def _find_fast_forward_samplers(dataloader: DataLoader) -> Optional[FastForwardS
 
 
 def _cycle_to_next_worker_and_reset(dataloader: DataLoader, state_dict: Dict[str, Any]) -> Iterator:
-    """
-    This function is used to cycle back the DataLoader ``_MultiProcessingDataLoaderIter``
-    workers and call the reset function.
+    """This function is used to cycle back the DataLoader ``_MultiProcessingDataLoaderIter`` workers and call the
+    reset function.
 
     Returns:
         iterator: Return the iterator generated from the provided ``DataLoader``.
@@ -329,9 +325,7 @@ def _cycle_to_next_worker_and_reset(dataloader: DataLoader, state_dict: Dict[str
 def _dataloader_to_state_dict(
     dataloader: DataLoader, iterator: Iterator, num_batches_processed: int = None
 ) -> List[Dict[str, Any]]:
-    """
-    Convert a dataloader to its associated state dict
-    """
+    """Convert a dataloader to its associated state dict."""
     out = {}
     if iterator is not None:
         out.update(_find_current_worker(iterator))
@@ -344,9 +338,7 @@ def _dataloader_to_state_dict(
 
 
 def _dataloader_load_state_dict(dataloader: DataLoader, state_dict: List[Dict[str, Any]]) -> DataLoader:
-    """
-    Reload ``DataLoader`` fast-forward sampler state dict.
-    """
+    """Reload ``DataLoader`` fast-forward sampler state dict."""
     fast_forward_sampler = _find_fast_forward_samplers(dataloader)
 
     if isinstance(fast_forward_sampler, Sampler):
@@ -377,8 +369,7 @@ def _find_current_worker(iterator: Iterator) -> Dict[str, Optional[int]]:
 
 
 def _sampler_metadata_collate(samples: List, dataset: Dataset, default_collate: Callable) -> Dict:
-    """
-    A collate function that adds the state dict of all samplers used in the worker processes.
+    """A collate function that adds the state dict of all samplers used in the worker processes.
 
     The structure will be:
 

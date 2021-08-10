@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pytest
+import torch
 
+import pytorch_lightning as pl
 from pytorch_lightning.trainer import Trainer
 from tests.helpers import BoringModel
 
@@ -39,3 +41,70 @@ def test_val_check_interval(tmpdir, max_epochs, denominator):
 
     assert model.train_epoch_calls == max_epochs
     assert model.val_epoch_calls == max_epochs * denominator
+
+
+def test_val_check_interval_with_steps(tmpdir):
+    class TestModel(BoringModel):
+        def training_step(self, batch, batch_idx):
+            print(f"batch idx = {batch_idx}")
+            return super().training_step(batch, batch_idx)
+
+    model = TestModel()
+    trainer = Trainer(default_root_dir=tmpdir, max_steps=64, val_check_interval=8)
+    trainer.fit(model)
+
+
+def test_val_check_interval_user(tmpdir):
+    class RandomDataset(torch.utils.data.Dataset):
+        def __init__(self, data_dim, label_dim, length):
+            super().__init__()
+            self.data_dim = data_dim
+            self.label_dim = label_dim
+            self.length = length
+
+        def __getitem__(self, idx):
+            return torch.randn(*self.data_dim), torch.randn(*self.label_dim)
+
+        def __len__(self):
+            return self.length
+
+    class RandomDataModule(pl.LightningDataModule):
+        def __init__(self, data_dim, label_dim, length):
+            super().__init__()
+            self.data_dim = data_dim
+            self.label_dim = label_dim
+            self.length = length
+
+        def setup(self, stage=None):
+            self.dataset = RandomDataset(self.data_dim, self.label_dim, self.length)
+
+        def train_dataloader(self):
+            loader = torch.utils.data.DataLoader(self.dataset, batch_size=10, num_workers=0, drop_last=True)
+            return loader
+
+        def val_dataloader(self):
+            return torch.utils.data.DataLoader(self.dataset, batch_size=10, num_workers=0, drop_last=True)
+
+    class SimpleLinear(pl.LightningModule):
+        def __init__(self):
+            super().__init__()
+            self.layer = torch.nn.Linear(in_features=3, out_features=1)
+
+        def configure_optimizers(self):
+            return torch.optim.Adam(self.parameters())
+
+        def training_step(self, batch, batch_idx):
+            print(f"batch idx = {batch_idx}")
+            data, label = batch
+            pred = self.layer(data)
+            return torch.nn.functional.mse_loss(pred, label)
+
+        def validation_step(self, batch, _batch_idx):
+            data, label = batch
+            pred = self.layer(data)
+            return torch.nn.functional.mse_loss(pred, label)
+
+    random_datamodule = RandomDataModule((3,), (1,), 1000)
+    model = SimpleLinear()
+    trainer = pl.Trainer(max_steps=500, val_check_interval=5)
+    trainer.fit(model, random_datamodule)

@@ -104,7 +104,7 @@ class SLURMEnvironment(ClusterEnvironment):
     def _is_interactive():
         return os.environ.get("SLURM_JOB_NAME") == "bash"
 
-    def _register_signal_handlers(self, trainer: "pl.Trainer") -> None:
+    def _register_signal_handlers(self, trainer: "pl.Trainer") -> None:  # pragma: no-cover
         """Register signal handlers that attempt to re-queue the job when terminated by the scheduler."""
         # see if we're using slurm (not interactive)
         if self._is_interactive():

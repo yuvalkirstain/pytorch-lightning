@@ -14,6 +14,7 @@
 import logging
 import os
 from unittest import mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -23,7 +24,7 @@ from pytorch_lightning.plugins.environments import SLURMEnvironment
 @mock.patch.dict(os.environ, {})
 def test_default_attributes():
     """Test the default attributes when no environment variables are set."""
-    env = SLURMEnvironment()
+    env = SLURMEnvironment(trainer=Mock())
     assert env.creates_children()
     assert env.master_address() == "127.0.0.1"
     assert env.master_port() == 12910
@@ -51,7 +52,7 @@ def test_default_attributes():
 )
 def test_attributes_from_environment_variables(caplog):
     """Test that the SLURM cluster environment takes the attributes from the environment variables."""
-    env = SLURMEnvironment()
+    env = SLURMEnvironment(trainer=Mock())
     assert env.master_address() == "1.1.1.1"
     assert env.master_port() == 15000 + 1234
     assert env.world_size() == 20
@@ -79,5 +80,5 @@ def test_attributes_from_environment_variables(caplog):
 def test_master_address_from_slurm_node_list(slurm_node_list, expected):
     """Test extracting the master node from different formats for the SLURM_NODELIST."""
     with mock.patch.dict(os.environ, {"SLURM_NODELIST": slurm_node_list}):
-        env = SLURMEnvironment()
+        env = SLURMEnvironment(trainer=Mock())
         assert env.master_address() == expected

@@ -721,7 +721,7 @@ class AcceleratorConnector:
         if self._cluster_environment is not None:
             return self._cluster_environment
         if self.is_slurm_managing_tasks:
-            env = SLURMEnvironment()
+            env = SLURMEnvironment(self.trainer)
         elif TorchElasticEnvironment.is_using_torchelastic():
             env = TorchElasticEnvironment()
         elif KubeflowEnvironment.is_using_kubeflow():

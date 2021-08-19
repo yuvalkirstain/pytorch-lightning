@@ -13,6 +13,7 @@
 # limitations under the License.
 import os
 from unittest import mock
+from unittest.mock import Mock
 
 import pytest
 import torch
@@ -39,7 +40,7 @@ def environment_combinations():
         "SLURM_PROCID": "3",
         "SLURM_NTASKS": "4",
     }
-    environment = SLURMEnvironment()
+    environment = SLURMEnvironment(trainer=Mock())
     yield environment, variables, expected
     # TorchElastic
     variables = {

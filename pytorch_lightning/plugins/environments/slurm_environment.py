@@ -18,7 +18,7 @@ import re
 import signal
 import subprocess
 
-from pytorch_lightning import Trainer
+import pytorch_lightning as pl
 from pytorch_lightning.plugins.environments.cluster_environment import ClusterEnvironment
 
 log = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 class SLURMEnvironment(ClusterEnvironment):
     """Cluster environment for training on a cluster managed by SLURM."""
 
-    def __init__(self, trainer: Trainer) -> None:
+    def __init__(self, trainer: "pl.Trainer") -> None:
         self._register_slurm_signal_handlers(trainer)
 
     def creates_children(self) -> bool:
@@ -107,7 +107,7 @@ class SLURMEnvironment(ClusterEnvironment):
     def _is_interactive():
         return os.environ.get("SLURM_JOB_NAME") == "bash"
 
-    def _register_slurm_signal_handlers(self, trainer: Trainer) -> None:
+    def _register_slurm_signal_handlers(self, trainer: "pl.Trainer") -> None:
         """Register signal handlers that attempt to re-queue the job when terminated by the scheduler."""
         # see if we're using slurm (not interactive)
         if self._is_interactive():

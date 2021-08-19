@@ -27,9 +27,6 @@ log = logging.getLogger(__name__)
 class SLURMEnvironment(ClusterEnvironment):
     """Cluster environment for training on a cluster managed by SLURM."""
 
-    def __init__(self, trainer: "pl.Trainer") -> None:
-        self._register_slurm_signal_handlers(trainer)
-
     def creates_children(self) -> bool:
         return True
 
@@ -107,41 +104,43 @@ class SLURMEnvironment(ClusterEnvironment):
     def _is_interactive():
         return os.environ.get("SLURM_JOB_NAME") == "bash"
 
-    def _register_slurm_signal_handlers(self, trainer: "pl.Trainer") -> None:
+    def _register_signal_handlers(self, trainer: "pl.Trainer") -> None:
         """Register signal handlers that attempt to re-queue the job when terminated by the scheduler."""
         # see if we're using slurm (not interactive)
         if self._is_interactive():
             return
 
         def sig_handler(*_):
-            if trainer.is_global_zero:
-                # save weights
-                log.info("handling SIGUSR1")
-                trainer.checkpoint_connector.hpc_save(trainer.weights_save_path, trainer.logger)
+            if self.global_rank() != 0:
+                return
 
-                # find job id
-                job_id = os.environ["SLURM_JOB_ID"]
-                cmd = ["scontrol", "requeue", job_id]
+            # save weights
+            log.info("handling SIGUSR1")
+            trainer.checkpoint_connector.hpc_save(trainer.weights_save_path, trainer.logger)
 
-                # requeue job
-                log.info(f"requeing job {job_id}...")
-                try:
-                    result = subprocess.call(cmd)
-                except FileNotFoundError:
-                    # This can occur if a subprocess call to `scontrol` is run outside a shell context
-                    # Re-attempt call (now with shell context). If any error is raised, propagate to user.
-                    # When running a shell command, it should be passed as a single string.
-                    joint_cmd = [str(x) for x in cmd]
-                    result = subprocess.call(" ".join(joint_cmd), shell=True)
+            # find job id
+            job_id = os.environ["SLURM_JOB_ID"]
+            cmd = ["scontrol", "requeue", job_id]
 
-                # print result text
-                if result == 0:
-                    log.info(f"requeued exp {job_id}")
-                else:
-                    log.warning("requeue failed...")
+            # requeue job
+            log.info(f"requeing job {job_id}...")
+            try:
+                result = subprocess.call(cmd)
+            except FileNotFoundError:
+                # This can occur if a subprocess call to `scontrol` is run outside a shell context
+                # Re-attempt call (now with shell context). If any error is raised, propagate to user.
+                # When running a shell command, it should be passed as a single string.
+                joint_cmd = [str(x) for x in cmd]
+                result = subprocess.call(" ".join(joint_cmd), shell=True)
 
-                # close experiment to avoid issues
-                trainer.logger.close()
+            # print result text
+            if result == 0:
+                log.info(f"requeued exp {job_id}")
+            else:
+                log.warning("requeue failed...")
+
+            # close experiment to avoid issues
+            trainer.logger.close()
 
         def term_handler(*_):
             log.info("bypassing sigterm")

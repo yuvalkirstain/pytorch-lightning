@@ -33,7 +33,7 @@ from pytorch_lightning.loops.dataloader.evaluation_loop import EvaluationLoop
 from pytorch_lightning.loops.dataloader.prediction_loop import PredictionLoop
 from pytorch_lightning.loops.fit_loop import FitLoop
 from pytorch_lightning.plugins import DDPSpawnPlugin, Plugin
-from pytorch_lightning.plugins.environments import ClusterEnvironment
+from pytorch_lightning.plugins.environments import ClusterEnvironment, SLURMEnvironment
 from pytorch_lightning.profiler import (
     AdvancedProfiler,
     BaseProfiler,
@@ -1092,6 +1092,10 @@ class Trainer(
     def _pre_training_routine(self):
         # wait for all to join if on distributed
         self.accelerator.barrier("setup_training")
+
+        # register auto-resubmit when on SLURM
+        if isinstance(self.accelerator_connector.cluster_environment, SLURMEnvironment):
+            self.accelerator_connector.cluster_environment._register_signal_handlers(self)
 
         self.checkpoint_connector.resume_end()
 

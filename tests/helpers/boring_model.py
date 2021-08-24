@@ -105,6 +105,7 @@ class BoringModel(LightningModule):
     def training_step(self, batch, batch_idx):
         output = self(batch)
         loss = self.loss(batch, output)
+        self.log("train_loss", loss)
         return {"loss": loss}
 
     def training_step_end(self, training_step_outputs):
@@ -116,6 +117,7 @@ class BoringModel(LightningModule):
     def validation_step(self, batch, batch_idx):
         output = self(batch)
         loss = self.loss(batch, output)
+        self.log("val_loss", loss)
         return {"x": loss}
 
     def validation_epoch_end(self, outputs) -> None:
@@ -124,6 +126,7 @@ class BoringModel(LightningModule):
     def test_step(self, batch, batch_idx):
         output = self(batch)
         loss = self.loss(batch, output)
+        self.log("test_loss", loss)
         return {"y": loss}
 
     def test_epoch_end(self, outputs) -> None:

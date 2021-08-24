@@ -373,7 +373,8 @@ class LightningCLI:
         self._subcommand_method_arguments[subcommand] = added
         return parser
 
-    def link_optimizers_and_lr_schedulers(self, parser: LightningArgumentParser) -> None:
+    @staticmethod
+    def link_optimizers_and_lr_schedulers(parser: LightningArgumentParser) -> None:
         """Creates argument links for optimizers and learning rate schedulers that specified a ``link_to``."""
         for key, (class_type, link_to) in parser.optimizers_and_lr_schedulers.items():
             if link_to == "AUTOMATIC":
